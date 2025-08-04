@@ -43,16 +43,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 hora local
+    // Convertir la fecha a formato completo con hora 12:00:00 UTC
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en UTC
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en zona horaria local (no UTC)
-      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
+      // Crear fecha en UTC para evitar problemas de zona horaria
+      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)) // 12:00 UTC
       
       console.log('🔍 API - Procesando fecha:')
       console.log(`  - Fecha recibida: ${date}`)
@@ -93,16 +93,16 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 hora local
+    // Convertir la fecha a formato completo con hora 12:00:00 UTC
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en UTC
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en zona horaria local (no UTC)
-      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
+      // Crear fecha en UTC para evitar problemas de zona horaria
+      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)) // 12:00 UTC
     }
 
     console.log('🔍 Actualizando reserva:')

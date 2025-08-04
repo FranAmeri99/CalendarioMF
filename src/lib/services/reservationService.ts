@@ -116,13 +116,24 @@ export class ReservationService {
   // Crear nueva reserva
   static async createReservation(data: CreateReservationData): Promise<ReservationWithUser> {
     try {
+      console.log('🔍 Creando reserva en servicio:')
+      console.log(`  - Fecha recibida: ${data.date}`)
+      console.log(`  - Usuario: ${data.userId}`)
+      console.log(`  - Equipo: ${data.teamId}`)
+      
       // Verificar si ya existe una reserva para el usuario en esa fecha
+      const startOfDay = new Date(data.date)
+      startOfDay.setHours(0, 0, 0, 0)
+      
+      const endOfDay = new Date(data.date)
+      endOfDay.setHours(23, 59, 59, 999)
+      
       const existingReservation = await prisma.reservation.findFirst({
         where: {
           userId: data.userId,
           date: {
-            gte: new Date(data.date.setHours(0, 0, 0, 0)),
-            lte: new Date(data.date.setHours(23, 59, 59, 999)),
+            gte: startOfDay,
+            lte: endOfDay,
           },
         },
       })
@@ -138,6 +149,8 @@ export class ReservationService {
           team: true,
         },
       })
+      
+      console.log(`✅ Reserva creada exitosamente: ${reservation.id}`)
       return reservation
     } catch (error) {
       console.error('Error creating reservation:', error)
