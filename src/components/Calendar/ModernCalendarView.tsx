@@ -94,7 +94,13 @@ export function ModernCalendarView({
   };
 
   const getDayReservations = (dateStr: string) => {
-    return reservations.filter((r) => r.date.split('T')[0] === dateStr);
+    console.log('🔍 Calendario - Filtrando reservas para fecha:', dateStr);
+    console.log('  - Todas las reservas:', reservations.map(r => ({ id: r.id, date: r.date, datePart: r.date.split('T')[0] })));
+    
+    const filtered = reservations.filter((r) => r.date.split('T')[0] === dateStr);
+    console.log('  - Reservas filtradas:', filtered.map(r => ({ id: r.id, date: r.date })));
+    
+    return filtered;
   };
 
   const getDayOccupancy = (dateStr: string) => {
