@@ -134,7 +134,7 @@ export function ModernCalendarView({
   };
 
   const days = getDaysInMonth(currentDate);
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD en zona horaria local
   const monthYear = currentDate.toLocaleDateString('es-ES', { 
     month: 'long', 
     year: 'numeric' 
@@ -181,7 +181,7 @@ export function ModernCalendarView({
                 return <div key={index} className="p-2 h-24" />;
               }
 
-              const dateStr = day.toISOString().split('T')[0];
+              const dateStr = day.toLocaleDateString('en-CA'); // Formato YYYY-MM-DD en zona horaria local
               const dayOccupancy = getDayOccupancy(dateStr);
               const isToday = dateStr === today;
               const isPast = dateStr < today;
