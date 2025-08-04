@@ -69,7 +69,11 @@ export default function AdminConfigPage() {
       const response = await fetch('/api/config')
       if (response.ok) {
         const configData = await response.json()
-        setConfig(configData)
+        if (configData.config) {
+          setConfig(configData.config)
+        } else {
+          console.log('No se encontró configuración, usando valores por defecto')
+        }
       } else {
         // Si no hay API, usar configuración por defecto
         console.log('Usando configuración por defecto')
