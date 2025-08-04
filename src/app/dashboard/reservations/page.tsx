@@ -30,10 +30,14 @@ import {
   Tabs,
   Tab,
 } from '@mui/material'
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { es } from 'date-fns/locale'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -456,7 +460,7 @@ export default function ReservationsPage() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body1">
-                        {format(new Date(reservation.date), 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+                        {dayjs(reservation.date).locale('es').format('dddd, D [de] MMMM [de] YYYY')}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -492,7 +496,7 @@ export default function ReservationsPage() {
         </DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap="16px" mt="8px">
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
               <DatePicker
                 label="Fecha"
                 value={formData.date}

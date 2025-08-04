@@ -21,9 +21,14 @@ import {
   CalendarToday,
   Warning,
 } from '@mui/icons-material'
-import { format, isSameDay, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+import isBetween from 'dayjs/plugin/isBetween'
 import type { ReservationWithUser } from '@/types'
+
+// Configurar dayjs con locale español y plugins
+dayjs.locale('es')
+dayjs.extend(isBetween)
 
 interface CalendarStatsProps {
   reservations: ReservationWithUser[]
@@ -34,28 +39,35 @@ export default function CalendarStats({ reservations, maxSpotsPerDay = 12 }: Cal
   // Calcular estadísticas
   const stats = useMemo(() => {
     const today = new Date()
-    const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 })
-    const endOfCurrentWeek = endOfWeek(today, { weekStartsOn: 1 })
-    const weekDays = eachDayOfInterval({ start: startOfCurrentWeek, end: endOfCurrentWeek })
+    const startOfCurrentWeek = dayjs(today).startOf('week')
+    const endOfCurrentWeek = dayjs(today).endOf('week')
+    const weekDays: Date[] = []
+    
+    let currentDay = startOfCurrentWeek
+    while (currentDay.isBefore(endOfCurrentWeek) || currentDay.isSame(endOfCurrentWeek, 'day')) {
+      weekDays.push(currentDay.toDate())
+      currentDay = currentDay.add(1, 'day')
+    }
 
     // Reservas de esta semana
     const weekReservations = reservations.filter(reservation => {
-      const reservationDate = new Date(reservation.date)
-      return reservationDate >= startOfCurrentWeek && reservationDate <= endOfCurrentWeek
+      const reservationDate = dayjs(reservation.date)
+      return reservationDate.isBetween(startOfCurrentWeek, endOfCurrentWeek, 'day', '[]')
     })
 
     // Días más ocupados
-    const dayStats = weekDays.map(day => {
+    const dayStats = weekDays.map((day: Date) => {
       const dayReservations = reservations.filter(reservation =>
-        isSameDay(new Date(reservation.date), day)
+        dayjs(reservation.date).isSame(day, 'day')
       )
       return {
         date: day,
-        count: dayReservations.length,
-        isFull: dayReservations.length >= maxSpotsPerDay,
-        reservations: dayReservations
+        count: dayReservations.length
       }
-    }).sort((a, b) => b.count - a.count)
+    })
+
+    // Encontrar el día más ocupado
+    const mostOccupiedDay = dayStats.reduce((a: any, b: any) => a.count > b.count ? a : b)
 
     // Equipos con más reservas
     const teamStats = reservations.reduce((acc, reservation) => {
@@ -89,7 +101,7 @@ export default function CalendarStats({ reservations, maxSpotsPerDay = 12 }: Cal
       dayStats,
       topTeams,
       topUsers,
-      mostOccupiedDay: dayStats[0],
+      mostOccupiedDay: mostOccupiedDay,
       averageOccupancy: reservations.length > 0 ? 
         (reservations.length / dayStats.filter(d => d.count > 0).length).toFixed(1) : 0
     }
@@ -149,14 +161,14 @@ export default function CalendarStats({ reservations, maxSpotsPerDay = 12 }: Cal
           {stats.mostOccupiedDay && stats.mostOccupiedDay.count > 0 ? (
             <Box sx={{ mt: 2 }}>
               <Typography variant="h5" color="error">
-                {format(stats.mostOccupiedDay.date, 'EEEE, d \'de\' MMMM', { locale: es })}
+                {dayjs(stats.mostOccupiedDay.date).format('EEEE, d \'de\' MMMM')}
               </Typography>
               <Typography variant="h4" color="error" sx={{ fontWeight: 'bold' }}>
                 {stats.mostOccupiedDay.count}/{maxSpotsPerDay} lugares
               </Typography>
               <Chip
-                label={stats.mostOccupiedDay.isFull ? "Completo" : "Alta ocupación"}
-                color={stats.mostOccupiedDay.isFull ? "error" : "warning"}
+                label={stats.mostOccupiedDay.count >= maxSpotsPerDay ? "Completo" : "Alta ocupación"}
+                color={stats.mostOccupiedDay.count >= maxSpotsPerDay ? "error" : "warning"}
                 sx={{ mt: 1 }}
               />
             </Box>

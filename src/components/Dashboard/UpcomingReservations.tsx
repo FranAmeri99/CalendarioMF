@@ -13,8 +13,11 @@ import {
   Box,
 } from '@mui/material'
 import { CalendarToday, Person } from '@mui/icons-material'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 interface Reservation {
   id: string
@@ -138,7 +141,7 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
                       mt: '4px'
                     }}
                   >
-                    {format(new Date(reservation.date), 'EEEE, d \'de\' MMMM', { locale: es })}
+                    {dayjs(reservation.date).format('EEEE, d \'de\' MMMM')}
                   </Typography>
                 }
               />

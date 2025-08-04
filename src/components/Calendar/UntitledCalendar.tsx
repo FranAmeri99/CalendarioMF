@@ -16,8 +16,8 @@ import {
   IconButton,
   Grid,
 } from '@mui/material'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
 import {
   LocationOn,
   Close as CancelIcon,
@@ -78,8 +78,8 @@ export default function UntitledCalendar({
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const getDayReservations = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd')
-    return reservations.filter((r) => r.date.split('T')[0] === dateStr)
+    const dateStr = dayjs(date).format('YYYY-MM-DD')
+    return reservations.filter((r) => dayjs(r.date).format('YYYY-MM-DD') === dateStr)
   }
 
   const getDayOccupancy = (date: Date) => {
@@ -97,7 +97,7 @@ export default function UntitledCalendar({
 
   const handleReservation = async (date: Date) => {
     if (onCreateReservation) {
-      await onCreateReservation(format(date, 'yyyy-MM-dd'))
+      await onCreateReservation(dayjs(date).format('YYYY-MM-DD'))
       setDialogOpen(false)
       setSelectedDate(null)
     }
@@ -117,17 +117,22 @@ export default function UntitledCalendar({
   }
 
   const navigateMonth = (direction: 'prev' | 'next') => {
-    setCurrentDate(direction === 'next' ? addMonths(currentDate, 1) : subMonths(currentDate, 1))
+    setCurrentDate(direction === 'next' ? dayjs(currentDate).add(1, 'month').toDate() : dayjs(currentDate).subtract(1, 'month').toDate())
   }
 
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(currentDate)
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
+  const monthStart = dayjs(currentDate).startOf('month')
+  const monthEnd = dayjs(currentDate).endOf('month')
+  const days: Date[] = []
+  let currentDay = monthStart
+  while (currentDay.isBefore(monthEnd) || currentDay.isSame(monthEnd, 'day')) {
+    days.push(currentDay.toDate())
+    currentDay = currentDay.add(1, 'day')
+  }
 
   // Ajustar para que la semana empiece en domingo
-  const firstDayOfWeek = monthStart.getDay()
+  const firstDayOfWeek = monthStart.day()
   const daysFromPrevMonth = Array.from({ length: firstDayOfWeek }, (_, i) => {
-    const date = new Date(monthStart)
+    const date = new Date(monthStart.toDate())
     date.setDate(date.getDate() - (firstDayOfWeek - i))
     return date
   })
@@ -169,7 +174,7 @@ export default function UntitledCalendar({
               ‹
             </Button>
             <Typography variant="h5" fontWeight={600}>
-              {format(currentDate, 'MMMM yyyy', { locale: es })}
+              {dayjs(currentDate).format('MMMM YYYY')}
             </Typography>
             <Button onClick={() => navigateMonth('next')} size="small" variant="outlined">
               ›
@@ -177,7 +182,7 @@ export default function UntitledCalendar({
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
             <Typography variant="body2" color="text.secondary">
-              {format(monthStart, 'MMM d', { locale: es })} - {format(monthEnd, 'MMM d, yyyy', { locale: es })}
+              {dayjs(monthStart.toDate()).format('MMM D')} - {dayjs(monthEnd.toDate()).format('MMM D, YYYY')}
             </Typography>
             <Chip
               label="Hoy"
@@ -218,8 +223,8 @@ export default function UntitledCalendar({
         {/* Calendar Grid */}
         <Grid container>
           {allDays.map((day, index) => {
-            const isCurrentMonth = isSameMonth(day, currentDate)
-            const isToday = isSameDay(day, new Date())
+            const isCurrentMonth = dayjs(day).isSame(dayjs(currentDate), 'month')
+            const isToday = dayjs(day).isSame(dayjs(), 'day')
             const dayOccupancy = getDayOccupancy(day)
             const hasReservations = dayOccupancy.reservations.length > 0
 
@@ -323,7 +328,7 @@ export default function UntitledCalendar({
       >
         <DialogTitle>
           {selectedDate &&
-            format(selectedDate, 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+            dayjs(selectedDate).format('EEEE, D \'de\' MMMM \'de\' YYYY')}
         </DialogTitle>
         <DialogContent>
           {selectedDate && (

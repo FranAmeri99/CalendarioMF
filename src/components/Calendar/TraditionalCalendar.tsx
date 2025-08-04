@@ -16,13 +16,16 @@ import {
 } from '@mui/material'
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { es } from 'date-fns/locale'
-import { format, isSameDay, parseISO } from 'date-fns'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import {
   LocationOn,
   Close as CancelIcon,
 } from '@mui/icons-material'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 interface Reservation {
   id: string
@@ -77,7 +80,7 @@ export default function TraditionalCalendar({
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const getDayReservations = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd')
+    const dateStr = dayjs(date).format('YYYY-MM-DD')
     return reservations.filter((r) => r.date.split('T')[0] === dateStr)
   }
 
@@ -98,7 +101,7 @@ export default function TraditionalCalendar({
 
   const handleReservation = async (date: Date) => {
     if (onCreateReservation) {
-      await onCreateReservation(format(date, 'yyyy-MM-dd'))
+      await onCreateReservation(dayjs(date).format('YYYY-MM-DD'))
       setDialogOpen(false)
       setSelectedDate(null)
     }
@@ -119,8 +122,8 @@ export default function TraditionalCalendar({
 
   const renderDayContents = (day: Date) => {
     const dayOccupancy = getDayOccupancy(day)
-    const isToday = isSameDay(day, new Date())
-    const isPast = day < new Date()
+    const isToday = dayjs(day).isSame(dayjs(), 'day')
+    const isPast = dayjs(day).isBefore(dayjs(), 'day')
     const occupancyRate = ((maxSpots - dayOccupancy.availableSpots) / maxSpots) * 100
 
     return (
@@ -199,29 +202,12 @@ export default function TraditionalCalendar({
 
       {/* Calendar */}
       <Paper sx={{ p: 2, maxWidth: 'fit-content' }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
           <StaticDatePicker
             displayStaticWrapperAs="desktop"
-            value={null}
+            value={selectedDate}
             onChange={handleDateChange}
-            sx={{
-              '& .MuiPickersCalendarHeader-root': {
-                mb: 2,
-              },
-              '& .MuiDayCalendar-weekDayLabel': {
-                fontWeight: 600,
-                color: 'text.secondary',
-              },
-              '& .MuiPickersDay-root': {
-                width: 40,
-                height: 40,
-                fontSize: '14px',
-                position: 'relative',
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                },
-              },
-            }}
+            disablePast
           />
         </LocalizationProvider>
       </Paper>
@@ -235,7 +221,7 @@ export default function TraditionalCalendar({
       >
         <DialogTitle>
           {selectedDate &&
-            format(selectedDate, 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+            dayjs(selectedDate).format('EEEE, D [de] MMMM [de] YYYY')}
         </DialogTitle>
         <DialogContent>
           {selectedDate && (

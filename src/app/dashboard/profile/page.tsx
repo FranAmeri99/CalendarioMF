@@ -35,8 +35,11 @@ import {
   Check,
   Close,
 } from '@mui/icons-material'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 // Tipos locales
 interface UserProfile {
@@ -381,7 +384,7 @@ export default function ProfilePage() {
                     />
                   )}
                   <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-                    Miembro desde: {new Date(profile.createdAt).toLocaleDateString('es-ES')}
+                    Miembro desde: {dayjs(profile.createdAt).format('DD/MM/YYYY')}
                   </Typography>
                 </Box>
               )}
@@ -409,7 +412,7 @@ export default function ProfilePage() {
                         <CalendarToday />
                       </ListItemIcon>
                       <ListItemText
-                        primary={format(new Date(reservation.date), 'EEEE, dd/MM/yyyy', { locale: es })}
+                        primary={dayjs(reservation.date).format('dddd, DD/MM/YYYY')}
                         secondary={reservation.team ? `Equipo: ${reservation.team.name}` : 'Sin equipo'}
                       />
                     </ListItem>
@@ -444,7 +447,7 @@ export default function ProfilePage() {
                 <Card>
                   <CardContent>
                     <Typography variant="h4" color="primary">
-                      {reservations.filter(r => new Date(r.date) >= new Date()).length}
+                      {reservations.filter(r => dayjs(r.date).isAfter(dayjs())).length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Reservas Futuras
@@ -456,7 +459,7 @@ export default function ProfilePage() {
                 <Card>
                   <CardContent>
                     <Typography variant="h4" color="primary">
-                      {reservations.length > 0 ? Math.round((reservations.filter(r => new Date(r.date) < new Date()).length / reservations.length) * 100) : 0}%
+                      {reservations.length > 0 ? Math.round((reservations.filter(r => dayjs(r.date).isBefore(dayjs())).length / reservations.length) * 100) : 0}%
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Tasa de Asistencia

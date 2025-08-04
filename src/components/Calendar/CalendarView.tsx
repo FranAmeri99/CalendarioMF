@@ -24,8 +24,11 @@ import {
   LocationOn,
   Close as CancelIcon,
 } from '@mui/icons-material'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 interface Reservation {
   id: string
@@ -341,7 +344,7 @@ export default function CalendarView({
       >
         <DialogTitle>
           {selectedDate &&
-            format(new Date(selectedDate), 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+            dayjs(selectedDate).format('EEEE, d \'de\' MMMM \'de\' yyyy')}
         </DialogTitle>
         <DialogContent>
           {selectedDate && (

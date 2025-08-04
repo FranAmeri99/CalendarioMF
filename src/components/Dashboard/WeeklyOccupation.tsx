@@ -8,8 +8,11 @@ import {
   Grid,
 } from '@mui/material'
 import { Business } from '@mui/icons-material'
-import { format, startOfWeek, addDays, isSameDay } from 'date-fns'
-import { es } from 'date-fns/locale'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 interface Reservation {
   id: string
@@ -34,20 +37,19 @@ interface WeeklyOccupationProps {
 
 export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccupationProps) {
   const today = new Date()
-  const startOfCurrentWeek = startOfWeek(today, { weekStartsOn: 1 }) // Lunes como inicio de semana
+  const startOfCurrentWeek = dayjs(today).startOf('week') // Lunes como inicio de semana
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(startOfCurrentWeek, i))
+  const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).add(i, 'day'))
 
-  const getReservationsForDay = (date: Date) => {
+  const getReservationsForDay = (date: dayjs.Dayjs) => {
     return reservations.filter(reservation => {
-      const reservationDate = new Date(reservation.date)
-      reservationDate.setHours(0, 0, 0, 0)
-      date.setHours(0, 0, 0, 0)
-      return isSameDay(reservationDate, date)
+      const reservationDate = dayjs(reservation.date).startOf('day')
+      const compareDate = date.startOf('day')
+      return compareDate.isSame(reservationDate, 'day')
     }).length
   }
 
-  const getOccupationPercentage = (date: Date) => {
+  const getOccupationPercentage = (date: dayjs.Dayjs) => {
     const dayReservations = getReservationsForDay(date)
     return Math.round((dayReservations / maxSpots) * 100)
   }
@@ -90,7 +92,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
           const occupation = getReservationsForDay(day)
           const percentage = getOccupationPercentage(day)
           const color = getOccupationColor(percentage)
-          const isToday = isSameDay(day, today)
+          const isToday = day.isSame(today, 'day')
 
           return (
             <Grid item xs={12} key={index}>
@@ -116,7 +118,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                       textTransform: 'capitalize'
                     }}
                   >
-                    {format(day, 'EEEE', { locale: es })}
+                    {day.format('EEEE')}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -126,7 +128,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                       lineHeight: '14px'
                     }}
                   >
-                    {format(day, 'd/M', { locale: es })}
+                    {day.format('d/M')}
                   </Typography>
                 </Box>
 

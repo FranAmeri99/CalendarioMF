@@ -22,17 +22,20 @@ import {
   Badge,
 } from '@mui/material'
 import {
-  ChevronLeft,
-  ChevronRight,
   CalendarToday,
   People,
-  CheckCircle,
   Warning,
   Info,
 } from '@mui/icons-material'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, isToday } from 'date-fns'
-import { es } from 'date-fns/locale'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import dayjs from 'dayjs'
+import 'dayjs/locale/es'
 import type { ReservationWithUser } from '@/types'
+
+// Configurar dayjs con locale español
+dayjs.locale('es')
 
 interface InteractiveCalendarProps {
   reservations: ReservationWithUser[]
@@ -58,15 +61,21 @@ export default function InteractiveCalendar({
 
   // Generar días del mes actual
   const calendarDays = useMemo(() => {
-    const start = startOfWeek(startOfMonth(currentDate))
-    const end = endOfWeek(endOfMonth(currentDate))
-    return eachDayOfInterval({ start, end })
+    const start = dayjs(currentDate).startOf('month').startOf('week')
+    const end = dayjs(currentDate).endOf('month').endOf('week')
+    const days: Date[] = []
+    let currentDay = start
+    while (currentDay.isBefore(end) || currentDay.isSame(end, 'day')) {
+      days.push(currentDay.toDate())
+      currentDay = currentDay.add(1, 'day')
+    }
+    return days
   }, [currentDate])
 
   // Obtener reservas para una fecha específica
   const getReservationsForDate = (date: Date) => {
     return reservations.filter(reservation => 
-      isSameDay(new Date(reservation.date), date)
+      dayjs(new Date(reservation.date)).isSame(date, 'day')
     )
   }
 
@@ -76,8 +85,8 @@ export default function InteractiveCalendar({
     const reservedSpots = dayReservations.length
     const availableSpots = maxSpotsPerDay - reservedSpots
     const isFull = reservedSpots >= maxSpotsPerDay
-    const isToday = isSameDay(date, new Date())
-    const isCurrentMonth = isSameMonth(date, currentDate)
+    const isToday = dayjs(date).isSame(dayjs(), 'day')
+    const isCurrentMonth = dayjs(date).isSame(dayjs(currentDate), 'month')
 
     return {
       reservedSpots,
@@ -96,11 +105,11 @@ export default function InteractiveCalendar({
   }
 
   const handlePreviousMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1))
+    setCurrentDate(dayjs(currentDate).subtract(1, 'month').toDate())
   }
 
   const handleNextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1))
+    setCurrentDate(dayjs(currentDate).add(1, 'month').toDate())
   }
 
   const handleReservationClick = (reservation: ReservationWithUser) => {
@@ -127,15 +136,15 @@ export default function InteractiveCalendar({
       {/* Header del calendario */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
         <IconButton onClick={handlePreviousMonth}>
-          <ChevronLeft />
+          <ChevronLeftIcon />
         </IconButton>
         
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold' }}>
-          {format(currentDate, 'MMMM yyyy', { locale: es })}
+          {dayjs(currentDate).format('MMMM YYYY')}
         </Typography>
         
         <IconButton onClick={handleNextMonth}>
-          <ChevronRight />
+          <ChevronRightIcon />
         </IconButton>
       </Box>
 
@@ -191,7 +200,7 @@ export default function InteractiveCalendar({
                       fontSize: '0.875rem'
                     }}
                   >
-                    {format(day, 'd')}
+                    {dayjs(day).format('d')}
                   </Typography>
 
                   {/* Indicadores de reservas */}
@@ -220,7 +229,7 @@ export default function InteractiveCalendar({
                         
                         {stats.reservedSpots === 0 && (
                           <Chip
-                            icon={<CheckCircle />}
+                            icon={<CheckCircleIcon />}
                             label="Disponible"
                             size="small"
                             color="success"
@@ -257,7 +266,7 @@ export default function InteractiveCalendar({
 
       {/* Leyenda */}
       <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <Chip icon={<CheckCircle />} label="Disponible" color="success" size="small" />
+        <Chip icon={<CheckCircleIcon />} label="Disponible" color="success" size="small" />
         <Chip icon={<People />} label="Con reservas" color="warning" size="small" />
         <Chip icon={<Warning />} label="Completo" color="error" size="small" />
         <Chip icon={<Info />} label="Hoy" color="primary" size="small" />
@@ -269,7 +278,7 @@ export default function InteractiveCalendar({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CalendarToday />
             <Typography>
-              {selectedDate && format(selectedDate, 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+              {selectedDate && dayjs(selectedDate).format('EEEE, D [de] MMMM [de] YYYY')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -291,7 +300,7 @@ export default function InteractiveCalendar({
                       color="warning"
                     />
                     <Chip
-                      icon={<CheckCircle />}
+                      icon={<CheckCircleIcon />}
                       label={`Disponibles: ${stats.availableSpots}`}
                       color="success"
                     />
