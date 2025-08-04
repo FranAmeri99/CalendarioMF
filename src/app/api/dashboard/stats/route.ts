@@ -24,12 +24,14 @@ export async function GET() {
     ])
 
     const maxSpots = config?.maxSpotsPerDay || 12
-    const today = dayjs().startOf('day')
+    const today = dayjs().tz('America/Argentina/Buenos_Aires').startOf('day')
     
     console.log('🔍 All reservations count:', reservations.length)
+    console.log('🔍 Current date (local):', dayjs().format('YYYY-MM-DD'))
+    console.log('🔍 Current date (Argentina):', today.format('YYYY-MM-DD'))
 
     const todayReservations = (reservations as any[]).filter(r => {
-      const reservationDate = dayjs(r.date).startOf('day')
+      const reservationDate = dayjs(r.date).tz('America/Argentina/Buenos_Aires').startOf('day')
       const isToday = reservationDate.isSame(today, 'day')
       console.log(`Reservation ${r.id}: ${r.date} -> ${reservationDate.format('YYYY-MM-DD')} isToday: ${isToday}`)
       return isToday
@@ -39,11 +41,11 @@ export async function GET() {
     const availableSpots = maxSpots - reservedSpots
 
     // Calcular promedio semanal de ocupación
-    const weekStart = dayjs().startOf('week')
-    const weekEnd = dayjs().endOf('week')
+    const weekStart = dayjs().tz('America/Argentina/Buenos_Aires').startOf('week')
+    const weekEnd = dayjs().tz('America/Argentina/Buenos_Aires').endOf('week')
     
     const weeklyReservations = (reservations as any[]).filter(r => {
-      const reservationDate = dayjs(r.date)
+      const reservationDate = dayjs(r.date).tz('America/Argentina/Buenos_Aires')
       return reservationDate.isSameOrAfter(weekStart, 'day') && reservationDate.isSameOrBefore(weekEnd, 'day')
     })
 
