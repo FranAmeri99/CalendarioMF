@@ -43,16 +43,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 hora local de Argentina
+    // Convertir la fecha a formato completo con hora 12:00:00 hora local
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria de Argentina
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en zona horaria de Argentina (UTC-3)
-      reservationDate = new Date(Date.UTC(year, month - 1, day, 15, 0, 0)) // 12:00 Argentina = 15:00 UTC
+      // Crear fecha en zona horaria local (no UTC)
+      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
     }
 
     console.log('🔍 Creando reserva:')
@@ -87,16 +87,16 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 hora local de Argentina
+    // Convertir la fecha a formato completo con hora 12:00:00 hora local
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria de Argentina
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en zona horaria de Argentina (UTC-3)
-      reservationDate = new Date(Date.UTC(year, month - 1, day, 15, 0, 0)) // 12:00 Argentina = 15:00 UTC
+      // Crear fecha en zona horaria local (no UTC)
+      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
     }
 
     console.log('🔍 Actualizando reserva:')
