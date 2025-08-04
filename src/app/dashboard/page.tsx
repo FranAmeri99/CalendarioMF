@@ -4,16 +4,13 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import {
+  Box,
   Container,
   Grid,
-  Paper,
   Typography,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Alert,
+  Paper,
   Button,
+  CircularProgress,
 } from '@mui/material'
 import {
   People,
@@ -21,15 +18,11 @@ import {
   CalendarToday,
   Check,
   Warning,
+  LocationOn,
 } from '@mui/icons-material'
-import Navigation from '@/components/Layout/Navigation'
-import InteractiveCalendar from '@/components/Calendar/InteractiveCalendar'
-import CalendarStats from '@/components/Calendar/CalendarStats'
-import { ReservationService } from '@/lib/services/reservationService'
-import { UserService } from '@/lib/services/userService'
-import { TeamService } from '@/lib/services/teamService'
-import { ConfigService } from '@/lib/services/configService'
-import type { ReservationWithUser } from '@/lib/services/reservationService'
+import MetricCard from '@/components/Dashboard/MetricCard'
+import UpcomingReservations from '@/components/Dashboard/UpcomingReservations'
+import WeeklyOccupation from '@/components/Dashboard/WeeklyOccupation'
 
 interface DashboardStats {
   totalUsers: number
@@ -37,20 +30,45 @@ interface DashboardStats {
   totalReservations: number
   availableSpots: number
   reservedSpots: number
+  maxSpots: number
+}
+
+interface Reservation {
+  id: string
+  date: string
+  userId: string
+  teamId?: string
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+  team?: {
+    id: string
+    name: string
+  }
+}
+
+interface Team {
+  id: string
+  name: string
+  description?: string
 }
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [reservations, setReservations] = useState<ReservationWithUser[]>([])
+  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalTeams: 0,
     totalReservations: 0,
     availableSpots: 0,
     reservedSpots: 0,
+    maxSpots: 12,
   })
-  const [loading, setLoading] = useState(true)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -58,7 +76,6 @@ export default function Dashboard() {
     }
   }, [status, router])
 
-  // Cargar datos reales
   useEffect(() => {
     if (status === 'authenticated') {
       loadDashboardData()
@@ -68,22 +85,21 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [reservationsData, userStats, teamStats, reservationStats, config] = await Promise.all([
-        ReservationService.getAllReservations(),
-        UserService.getUserStats(),
-        TeamService.getSimpleTeams(),
-        ReservationService.getReservationStats(),
-        ConfigService.getConfig(),
-      ])
+      const response = await fetch('/api/dashboard/stats')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
 
-      setReservations(reservationsData)
-      setStats({
-        totalUsers: userStats.totalUsers,
-        totalTeams: teamStats.length,
-        totalReservations: reservationStats.totalReservations,
-        availableSpots: config.maxSpotsPerDay - reservationStats.todayReservations,
-        reservedSpots: reservationStats.todayReservations,
-      })
+      setStats(data.stats)
+      setReservations(data.reservations)
+      setTeams(data.teams)
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -91,18 +107,12 @@ export default function Dashboard() {
     }
   }
 
-  const handleDayClick = (date: Date) => {
-    console.log('Día seleccionado:', date)
-    // Aquí podrías navegar a la página de reservas con la fecha seleccionada
-  }
-
-  const handleReservationClick = (reservation: ReservationWithUser) => {
-    console.log('Reserva seleccionada:', reservation)
-    // Aquí podrías mostrar detalles de la reserva o editarla
-  }
-
-  if (status === 'loading') {
-    return <div>Cargando...</div>
+  if (status === 'loading' || loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    )
   }
 
   if (!session) {
@@ -110,155 +120,176 @@ export default function Dashboard() {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navigation />
-      
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 4 }}>
+    <Container maxWidth="xl" sx={{ p: 0 }}>
+      {/* Header */}
+      <Box mb="32px">
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            color: '#1a1a1a',
+            mb: '8px',
+            fontSize: '32px',
+            lineHeight: '40px'
+          }}
+        >
           Dashboard
         </Typography>
+        <Typography
+          variant="h6"
+          color="text.secondary"
+          sx={{
+            fontWeight: 400,
+            fontSize: '16px',
+            lineHeight: '24px'
+          }}
+        >
+          Bienvenido de vuelta, {session.user?.name}
+        </Typography>
+      </Box>
 
-        {/* Estadísticas rápidas */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <People color="primary" />
-                  <Box>
-                    <Typography variant="h6">{stats.totalUsers}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Usuarios
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Business color="primary" />
-                  <Box>
-                    <Typography variant="h6">{stats.totalTeams}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Equipos
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <CalendarToday color="primary" />
-                  <Box>
-                    <Typography variant="h6">{stats.totalReservations}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Reservas Activas
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Check color="primary" />
-                  <Box>
-                    <Typography variant="h6">{stats.availableSpots}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Lugares Disponibles
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        {/* Alertas */}
-        <Box sx={{ mb: 4 }}>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            <Typography variant="body2">
-              <strong>Recordatorio:</strong> Solo hay 12 lugares disponibles por día en la oficina.
-            </Typography>
-          </Alert>
-          
-          {stats.reservedSpots > 10 && (
-            <Alert severity="warning">
-              <Typography variant="body2">
-                <strong>Atención:</strong> Hay días con alta ocupación. Revisa el calendario para más detalles.
-              </Typography>
-            </Alert>
-          )}
-        </Box>
-
-        {/* Calendario Interactivo */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-            Calendario de Reservas
-          </Typography>
-          <InteractiveCalendar
-            reservations={reservations}
-            onDayClick={handleDayClick}
-            onReservationClick={handleReservationClick}
-            maxSpotsPerDay={12}
+      {/* Métricas principales */}
+      <Grid container spacing="24px" mb="32px">
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Ocupación Hoy"
+            value={`${stats.reservedSpots}/${stats.maxSpots}`}
+            subtitle={`${stats.availableSpots} lugares disponibles`}
+            icon={<LocationOn />}
+            color="primary"
           />
-        </Box>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Promedio Semanal"
+            value={`${Math.round((stats.reservedSpots / stats.maxSpots) * 100)}%`}
+            subtitle="de ocupación"
+            icon={<Business />}
+            color="secondary"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Total Empleados"
+            value={stats.totalUsers}
+            subtitle={`${stats.totalTeams} equipos activos`}
+            icon={<People />}
+            color="success"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Mis Reservas"
+            value={reservations.filter(r => r.userId === session.user?.id).length}
+            subtitle="próximas reservas"
+            icon={<CalendarToday />}
+            color="warning"
+          />
+        </Grid>
+      </Grid>
 
-                 {/* Estadísticas del calendario */}
-         <Box sx={{ mb: 4 }}>
-           <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-             Estadísticas del Calendario
-           </Typography>
-           <CalendarStats reservations={reservations} maxSpotsPerDay={12} />
-         </Box>
+      {/* Secciones principales */}
+      <Grid container spacing="24px">
+        <Grid item xs={12} md={6}>
+          <UpcomingReservations reservations={reservations} />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <WeeklyOccupation reservations={reservations} maxSpots={stats.maxSpots} />
+        </Grid>
+      </Grid>
 
-         {/* Acciones rápidas */}
-         <Box>
-           <Typography variant="h5" component="h2" gutterBottom sx={{ mb: 3 }}>
-             Acciones Rápidas
-           </Typography>
-           <Grid container spacing={2}>
-             <Grid item>
-               <Button
-                 variant="contained"
-                 startIcon={<CalendarToday />}
-                 onClick={() => router.push('/dashboard/reservations')}
-               >
-                 Nueva Reserva
-               </Button>
-             </Grid>
-             <Grid item>
-               <Button
-                 variant="outlined"
-                 startIcon={<People />}
-                 onClick={() => router.push('/dashboard/users')}
-               >
-                 Gestionar Usuarios
-               </Button>
-             </Grid>
-             <Grid item>
-               <Button
-                 variant="outlined"
-                 startIcon={<Business />}
-                 onClick={() => router.push('/dashboard/teams')}
-               >
-                 Gestionar Equipos
-               </Button>
-             </Grid>
-           </Grid>
-         </Box>
-      </Container>
-    </Box>
+      {/* Acciones rápidas */}
+      <Box mt="32px">
+        <Paper
+          sx={{
+            p: '24px',
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              mb: '16px',
+              fontSize: '18px',
+              lineHeight: '24px',
+              color: '#1a1a1a'
+            }}
+          >
+            Acciones Rápidas
+          </Typography>
+          <Box display="flex" gap="16px" flexWrap="wrap">
+            <Button
+              variant="contained"
+              startIcon={<CalendarToday />}
+              onClick={() => router.push('/dashboard/reservations')}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                px: '24px',
+                py: '12px',
+                fontSize: '14px',
+                lineHeight: '20px',
+                bgcolor: '#1976d2',
+                '&:hover': {
+                  bgcolor: '#1565c0'
+                }
+              }}
+            >
+              Nueva Reserva
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<Business />}
+              onClick={() => router.push('/dashboard/teams')}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                px: '24px',
+                py: '12px',
+                fontSize: '14px',
+                lineHeight: '20px',
+                borderColor: '#e0e0e0',
+                color: '#1a1a1a',
+                '&:hover': {
+                  borderColor: '#1976d2',
+                  bgcolor: 'rgba(25, 118, 210, 0.04)'
+                }
+              }}
+            >
+              Ver Equipos
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<People />}
+              onClick={() => router.push('/dashboard/users')}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 600,
+                px: '24px',
+                py: '12px',
+                fontSize: '14px',
+                lineHeight: '20px',
+                borderColor: '#e0e0e0',
+                color: '#1a1a1a',
+                '&:hover': {
+                  borderColor: '#1976d2',
+                  bgcolor: 'rgba(25, 118, 210, 0.04)'
+                }
+              }}
+            >
+              Gestionar Usuarios
+            </Button>
+          </Box>
+        </Paper>
+      </Box>
+    </Container>
   )
 } 

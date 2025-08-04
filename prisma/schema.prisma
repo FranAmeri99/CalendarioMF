@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,36 +8,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("USER")
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
-  teamId    String?
-  team      Team?    @relation(fields: [teamId], references: [id])
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String
+  password     String
+  role         String        @default("USER")
+  avatar       String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  teamId       String?
   reservations Reservation[]
-  teamMembers Team[] @relation("TeamMembers")
+  teamMembers  Team[]        @relation("TeamMembers")
+  team         Team?         @relation(fields: [teamId], references: [id])
 
   @@map("users")
 }
 
 model Team {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relaciones
-  members     User[]
-  leader      User?    @relation("TeamMembers", fields: [leaderId], references: [id])
-  leaderId    String?
+  id           String        @id @default(cuid())
+  name         String        @unique
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  leaderId     String?
   reservations Reservation[]
+  leader       User?         @relation("TeamMembers", fields: [leaderId], references: [id])
+  members      User[]
 
   @@map("teams")
 }
@@ -52,26 +45,24 @@ model Reservation {
   teamId    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relaciones
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   team      Team?    @relation(fields: [teamId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([date, userId])
   @@map("reservations")
 }
 
 model SystemConfig {
-  id                              String @id @default(cuid())
-  maxSpotsPerDay                  Int    @default(12)
-  allowWeekendReservations        Boolean @default(false)
-  allowHolidayReservations        Boolean @default(false)
-  maxAdvanceBookingDays           Int    @default(30)
-  minAdvanceBookingHours          Int    @default(2)
-  autoCancelInactiveReservations  Boolean @default(true)
-  inactiveReservationHours        Int    @default(24)
-  createdAt                       DateTime @default(now())
-  updatedAt                       DateTime @updatedAt
+  id                             String   @id @default(cuid())
+  maxSpotsPerDay                 Int      @default(12)
+  allowWeekendReservations       Boolean  @default(false)
+  allowHolidayReservations       Boolean  @default(false)
+  maxAdvanceBookingDays          Int      @default(30)
+  minAdvanceBookingHours         Int      @default(2)
+  autoCancelInactiveReservations Boolean  @default(true)
+  inactiveReservationHours       Int      @default(24)
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
 
   @@map("system_config")
-} 
+}

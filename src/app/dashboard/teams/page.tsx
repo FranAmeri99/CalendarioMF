@@ -1,11 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import {
   Box,
+  Container,
   Typography,
-  Button,
   Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -13,120 +25,92 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
+  CircularProgress,
 } from '@mui/material'
 import {
-  Add,
-  Edit,
-  Delete,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
   Business,
-  Person,
 } from '@mui/icons-material'
-import toast from 'react-hot-toast'
 
 interface Team {
   id: string
   name: string
   description?: string
+  leaderId?: string
   leader?: {
     id: string
     name: string
     email: string
   }
-  members: {
+  members?: {
     id: string
     name: string
     email: string
   }[]
-  createdAt: string
 }
 
 interface User {
   id: string
   name: string
   email: string
+  role: string
+  teamId?: string
+}
+
+interface FormData {
+  name: string
+  description: string
+  leaderId: string
 }
 
 export default function TeamsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [teams, setTeams] = useState<Team[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTeam, setEditingTeam] = useState<Team | null>(null)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     leaderId: '',
   })
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchData()
+    }
+  }, [status])
 
   const fetchData = async () => {
     try {
-      // Aquí se harían las llamadas a la API
-      // Por ahora usamos datos de ejemplo
-      setTeams([
-        {
-          id: '1',
-          name: 'Desarrollo',
-          description: 'Equipo de desarrollo de software',
-          leader: {
-            id: '1',
-            name: 'Juan Pérez',
-            email: 'juan@example.com',
-          },
-          members: [
-            { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
-            { id: '3', name: 'Carlos López', email: 'carlos@example.com' },
-          ],
-          createdAt: '2024-01-01',
-        },
-        {
-          id: '2',
-          name: 'Diseño',
-          description: 'Equipo de diseño UX/UI',
-          leader: {
-            id: '2',
-            name: 'María García',
-            email: 'maria@example.com',
-          },
-          members: [
-            { id: '2', name: 'María García', email: 'maria@example.com' },
-          ],
-          createdAt: '2024-01-02',
-        },
-        {
-          id: '3',
-          name: 'Marketing',
-          description: 'Equipo de marketing digital',
-          leader: undefined,
-          members: [],
-          createdAt: '2024-01-03',
-        },
-      ])
+      setLoading(true)
+      const response = await fetch('/api/teams')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
 
-      setUsers([
-        { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
-        { id: '2', name: 'María García', email: 'maria@example.com' },
-        { id: '3', name: 'Carlos López', email: 'carlos@example.com' },
-        { id: '4', name: 'Ana Martínez', email: 'ana@example.com' },
-      ])
+      setTeams(data.teams)
+      setUsers(data.users)
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Error al cargar los datos')
     } finally {
       setLoading(false)
     }
@@ -138,7 +122,7 @@ export default function TeamsPage() {
       setFormData({
         name: team.name,
         description: team.description || '',
-        leaderId: team.leader?.id || '',
+        leaderId: team.leaderId || '',
       })
     } else {
       setEditingTeam(null)
@@ -154,29 +138,60 @@ export default function TeamsPage() {
   const handleCloseDialog = () => {
     setDialogOpen(false)
     setEditingTeam(null)
+    setFormData({
+      name: '',
+      description: '',
+      leaderId: '',
+    })
   }
 
   const handleSubmit = async () => {
     try {
       if (!formData.name) {
-        toast.error('Debe ingresar un nombre para el equipo')
+        alert('Debe ingresar un nombre para el equipo')
         return
       }
 
-      // Aquí se haría la llamada a la API
-      if (editingTeam) {
-        // Actualizar equipo
-        toast.success('Equipo actualizado exitosamente')
-      } else {
-        // Crear nuevo equipo
-        toast.success('Equipo creado exitosamente')
+      const url = '/api/teams'
+      const method = editingTeam ? 'PUT' : 'POST'
+      
+      const body = editingTeam 
+        ? {
+            id: editingTeam.id,
+            name: formData.name,
+            description: formData.description,
+            leaderId: formData.leaderId || undefined,
+          }
+        : {
+            name: formData.name,
+            description: formData.description,
+            leaderId: formData.leaderId || undefined,
+          }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert(editingTeam ? 'Equipo actualizado exitosamente' : 'Equipo creado exitosamente')
       handleCloseDialog()
       fetchData()
     } catch (error) {
       console.error('Error saving team:', error)
-      toast.error('Error al guardar el equipo')
+      alert('Error al guardar el equipo')
     }
   }
 
@@ -186,60 +201,121 @@ export default function TeamsPage() {
     }
 
     try {
-      // Aquí se haría la llamada a la API
-      toast.success('Equipo eliminado exitosamente')
+      const response = await fetch(`/api/teams?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert('Equipo eliminado exitosamente')
       fetchData()
     } catch (error) {
       console.error('Error deleting team:', error)
-      toast.error('Error al eliminar el equipo')
+      alert('Error al eliminar el equipo')
     }
   }
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Cargando equipos...</Typography>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
       </Box>
     )
   }
 
+  if (!session) {
+    return null
+  }
+
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">
+    <Container maxWidth="xl" sx={{ p: 0 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb="32px">
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            color: '#1a1a1a',
+            fontSize: '32px',
+            lineHeight: '40px'
+          }}
+        >
           Gestión de Equipos
         </Typography>
         <Button
           variant="contained"
-          startIcon={<Add />}
+          startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={{
+            borderRadius: '12px',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: '24px',
+            py: '12px',
+            fontSize: '14px',
+            lineHeight: '20px',
+            bgcolor: '#1976d2',
+            '&:hover': {
+              bgcolor: '#1565c0'
+            }
+          }}
         >
           Nuevo Equipo
         </Button>
       </Box>
 
-      <Paper>
+      <Paper
+        sx={{
+          background: '#ffffff',
+          border: '1px solid #e8e8e8',
+          borderRadius: '16px',
+          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+          overflow: 'hidden'
+        }}
+      >
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Equipo</TableCell>
-                <TableCell>Descripción</TableCell>
-                <TableCell>Líder</TableCell>
-                <TableCell>Miembros</TableCell>
-                <TableCell>Fecha de Creación</TableCell>
-                <TableCell>Acciones</TableCell>
+              <TableRow sx={{ bgcolor: '#fafafa' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Equipo</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Descripción</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Líder</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Miembros</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {teams.map((team) => (
-                <TableRow key={team.id}>
+                <TableRow key={team.id} hover>
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar>
-                        <Business />
-                      </Avatar>
-                      <Typography variant="body2">{team.name}</Typography>
+                    <Box display="flex" alignItems="center" gap="12px">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: '#9c27b0',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontWeight: 600,
+                          fontSize: '16px'
+                        }}
+                      >
+                        <Business sx={{ fontSize: 20 }} />
+                      </Box>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                        {team.name}
+                      </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
@@ -249,40 +325,67 @@ export default function TeamsPage() {
                   </TableCell>
                   <TableCell>
                     {team.leader ? (
-                      <Chip
-                        label={team.leader.name}
-                        size="small"
-                        color="primary"
-                      />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {team.leader.name}
+                      </Typography>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        Sin líder
+                        Sin líder asignado
                       </Typography>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={`${team.members.length} miembros`}
-                      size="small"
-                    />
+                    {team.members && team.members.length > 0 ? (
+                      <Box display="flex" gap="4px" flexWrap="wrap">
+                        {team.members.slice(0, 3).map((member) => (
+                          <Chip
+                            key={member.id}
+                            label={member.name}
+                            size="small"
+                            sx={{
+                              bgcolor: '#e3f2fd',
+                              color: '#1976d2',
+                              fontSize: '10px',
+                              height: '20px'
+                            }}
+                          />
+                        ))}
+                        {team.members.length > 3 && (
+                          <Chip
+                            label={`+${team.members.length - 3}`}
+                            size="small"
+                            sx={{
+                              bgcolor: '#f5f5f5',
+                              color: '#666',
+                              fontSize: '10px',
+                              height: '20px'
+                            }}
+                          />
+                        )}
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Sin miembros
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    {new Date(team.createdAt).toLocaleDateString('es-ES')}
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(team)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(team.id)}
-                    >
-                      <Delete />
-                    </IconButton>
+                    <Box display="flex" gap="8px">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(team)}
+                        sx={{ color: '#1976d2' }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(team.id)}
+                        sx={{ color: '#d32f2f' }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -297,40 +400,43 @@ export default function TeamsPage() {
           {editingTeam ? 'Editar Equipo' : 'Nuevo Equipo'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box display="flex" flexDirection="column" gap="16px" mt="8px">
             <TextField
-              fullWidth
-              label="Nombre del Equipo"
+              label="Nombre del equipo"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              fullWidth
+              size="small"
               required
             />
 
             <TextField
-              fullWidth
               label="Descripción"
-              multiline
-              rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              fullWidth
+              size="small"
+              multiline
+              rows={3}
             />
 
-            <TextField
-              select
-              fullWidth
-              label="Líder del Equipo"
-              value={formData.leaderId}
-              onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
-            >
-              <option value="">
-                <em>Sin líder</em>
-              </option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </TextField>
+            <FormControl fullWidth size="small">
+              <InputLabel>Líder del equipo (opcional)</InputLabel>
+              <Select
+                value={formData.leaderId}
+                onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
+                label="Líder del equipo (opcional)"
+              >
+                <MenuItem value="">
+                  <em>Sin líder asignado</em>
+                </MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -340,6 +446,6 @@ export default function TeamsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 } 

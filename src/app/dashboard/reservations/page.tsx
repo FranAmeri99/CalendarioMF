@@ -1,18 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import {
   Box,
+  Container,
   Typography,
-  Button,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,25 +18,36 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
   Chip,
-  Alert,
+  CircularProgress,
+  Tabs,
+  Tab,
 } from '@mui/material'
-import {
-  Add,
-  Edit,
-  Delete,
-  CalendarToday,
-} from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import toast from 'react-hot-toast'
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  CalendarToday,
+} from '@mui/icons-material'
+import { format } from 'date-fns'
+import UntitledCalendar from '@/components/Calendar/UntitledCalendar'
 
 interface Reservation {
   id: string
   date: string
+  userId: string
+  teamId?: string
   user: {
     id: string
     name: string
@@ -56,63 +63,71 @@ interface User {
   id: string
   name: string
   email: string
+  role: string
+  teamId?: string
 }
 
 interface Team {
   id: string
   name: string
+  description?: string
+}
+
+interface FormData {
+  date: Date | null
+  userId: string
+  teamId: string
 }
 
 export default function ReservationsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null)
-  const [formData, setFormData] = useState({
-    date: new Date(),
+  const [formData, setFormData] = useState<FormData>({
+    date: null,
     userId: '',
     teamId: '',
   })
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchData()
+    }
+  }, [status])
 
   const fetchData = async () => {
     try {
-      // Aquí se harían las llamadas a la API
-      // Por ahora usamos datos de ejemplo
-      setReservations([
-        {
-          id: '1',
-          date: '2024-01-15',
-          user: { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
-          team: { id: '1', name: 'Desarrollo' },
-        },
-        {
-          id: '2',
-          date: '2024-01-16',
-          user: { id: '2', name: 'María García', email: 'maria@example.com' },
-          team: { id: '2', name: 'Diseño' },
-        },
-      ])
+      setLoading(true)
+      const response = await fetch('/api/reservations')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
 
-      setUsers([
-        { id: '1', name: 'Juan Pérez', email: 'juan@example.com' },
-        { id: '2', name: 'María García', email: 'maria@example.com' },
-        { id: '3', name: 'Carlos López', email: 'carlos@example.com' },
-      ])
-
-      setTeams([
-        { id: '1', name: 'Desarrollo' },
-        { id: '2', name: 'Diseño' },
-        { id: '3', name: 'Marketing' },
-      ])
+      setReservations(data.reservations)
+      setUsers(data.users)
+      setTeams(data.teams)
     } catch (error) {
       console.error('Error fetching data:', error)
-      toast.error('Error al cargar los datos')
     } finally {
       setLoading(false)
     }
@@ -123,15 +138,19 @@ export default function ReservationsPage() {
       setEditingReservation(reservation)
       setFormData({
         date: new Date(reservation.date),
-        userId: reservation.user.id,
-        teamId: reservation.team?.id || '',
+        userId: reservation.userId,
+        teamId: reservation.teamId || '',
       })
     } else {
       setEditingReservation(null)
+      // Si es un usuario normal, usar su ID y equipo automáticamente
+      const currentUserId = session?.user?.id
+      const currentUser = users.find(u => u.id === currentUserId)
+      
       setFormData({
-        date: new Date(),
-        userId: '',
-        teamId: '',
+        date: null,
+        userId: currentUserId || '',
+        teamId: currentUser?.teamId || '',
       })
     }
     setDialogOpen(true)
@@ -140,29 +159,60 @@ export default function ReservationsPage() {
   const handleCloseDialog = () => {
     setDialogOpen(false)
     setEditingReservation(null)
+    setFormData({
+      date: null,
+      userId: '',
+      teamId: '',
+    })
   }
 
   const handleSubmit = async () => {
     try {
-      if (!formData.userId) {
-        toast.error('Debe seleccionar un usuario')
+      if (!formData.userId || !formData.date) {
+        alert('Debe seleccionar un usuario y una fecha')
         return
       }
 
-      // Aquí se haría la llamada a la API
-      if (editingReservation) {
-        // Actualizar reserva
-        toast.success('Reserva actualizada exitosamente')
-      } else {
-        // Crear nueva reserva
-        toast.success('Reserva creada exitosamente')
+      const url = editingReservation ? '/api/reservations' : '/api/reservations'
+      const method = editingReservation ? 'PUT' : 'POST'
+      
+      const body = editingReservation 
+        ? {
+            id: editingReservation.id,
+            date: formData.date.toISOString(),
+            userId: formData.userId,
+            teamId: formData.teamId || undefined,
+          }
+        : {
+            date: formData.date.toISOString(),
+            userId: formData.userId,
+            teamId: formData.teamId || undefined,
+          }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert(editingReservation ? 'Reserva actualizada exitosamente' : 'Reserva creada exitosamente')
       handleCloseDialog()
       fetchData()
     } catch (error) {
       console.error('Error saving reservation:', error)
-      toast.error('Error al guardar la reserva')
+      alert('Error al guardar la reserva')
     }
   }
 
@@ -172,88 +222,268 @@ export default function ReservationsPage() {
     }
 
     try {
-      // Aquí se haría la llamada a la API
-      toast.success('Reserva eliminada exitosamente')
+      const response = await fetch(`/api/reservations?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert('Reserva eliminada exitosamente')
       fetchData()
     } catch (error) {
       console.error('Error deleting reservation:', error)
-      toast.error('Error al eliminar la reserva')
+      alert('Error al eliminar la reserva')
     }
   }
 
-  if (loading) {
+  const handleDayClick = (date: Date) => {
+    setSelectedDate(date)
+    handleOpenDialog()
+    setFormData({
+      date: date,
+      userId: '',
+      teamId: '',
+    })
+  }
+
+  const handleViewModeChange = (event: React.SyntheticEvent, newValue: 'calendar' | 'list') => {
+    setViewMode(newValue)
+  }
+
+  if (status === 'loading' || loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Cargando reservas...</Typography>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
       </Box>
     )
   }
 
+  if (!session) {
+    return null
+  }
+
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">
+    <Container maxWidth="xl" sx={{ p: 0 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb="32px">
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            color: '#1a1a1a',
+            fontSize: '32px',
+            lineHeight: '40px'
+          }}
+        >
           Gestión de Reservas
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
-        >
-          Nueva Reserva
-        </Button>
+        <Box display="flex" gap="16px" alignItems="center">
+          <Tabs
+            value={viewMode}
+            onChange={handleViewModeChange}
+            sx={{
+              '& .MuiTab-root': {
+                minWidth: 'auto',
+                px: '16px',
+                py: '8px',
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                lineHeight: '20px',
+              }
+            }}
+          >
+            <Tab
+              value="calendar"
+              label="Calendario"
+            />
+            <Tab
+              value="list"
+              label="Lista"
+            />
+          </Tabs>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: '24px',
+              py: '12px',
+              fontSize: '14px',
+              lineHeight: '20px',
+              bgcolor: '#1976d2',
+              '&:hover': {
+                bgcolor: '#1565c0'
+              }
+            }}
+          >
+            Nueva Reserva
+          </Button>
+        </Box>
       </Box>
 
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Fecha</TableCell>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Equipo</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {reservations.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell>
-                    {format(new Date(reservation.date), 'dd/MM/yyyy', { locale: es })}
-                  </TableCell>
-                  <TableCell>{reservation.user.name}</TableCell>
-                  <TableCell>
-                    {reservation.team ? (
-                      <Chip label={reservation.team.name} size="small" />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        Sin equipo
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{reservation.user.email}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(reservation)}
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDelete(reservation.id)}
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
+      {/* Vista de Calendario */}
+      {viewMode === 'calendar' && (
+        <UntitledCalendar
+          reservations={reservations}
+          users={users}
+          teams={teams}
+          currentUser={session?.user as User}
+          maxSpots={12}
+          onCreateReservation={async (date: string) => {
+            // Crear reserva automáticamente para el usuario actual
+            const currentUserId = session?.user?.id
+            const currentUser = users.find(u => u.id === currentUserId)
+            
+            try {
+              const response = await fetch('/api/reservations', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  date: date,
+                  userId: currentUserId,
+                  teamId: currentUser?.teamId || undefined,
+                }),
+              })
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+              }
+
+              const data = await response.json()
+              
+              if (data.error) {
+                throw new Error(data.error)
+              }
+
+              alert('Reserva creada exitosamente')
+              fetchData()
+            } catch (error) {
+              console.error('Error creating reservation:', error)
+              alert('Error al crear la reserva')
+            }
+          }}
+          onCancelReservation={async (reservationId: string) => {
+            try {
+              const response = await fetch(`/api/reservations?id=${reservationId}`, {
+                method: 'DELETE',
+              })
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+              }
+
+              const data = await response.json()
+              
+              if (data.error) {
+                throw new Error(data.error)
+              }
+
+              alert('Reserva cancelada exitosamente')
+              fetchData()
+            } catch (error) {
+              console.error('Error canceling reservation:', error)
+              alert('Error al cancelar la reserva')
+            }
+          }}
+        />
+      )}
+
+      {/* Vista de Lista */}
+      {viewMode === 'list' && (
+        <Paper
+          sx={{
+            background: '#ffffff',
+            border: '1px solid #e8e8e8',
+            borderRadius: '16px',
+            boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+            overflow: 'hidden'
+          }}
+        >
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: '#fafafa' }}>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Usuario</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Equipo</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Fecha</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Acciones</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+              </TableHead>
+              <TableBody>
+                {reservations.map((reservation) => (
+                  <TableRow key={reservation.id} hover>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {reservation.user.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {reservation.user.email}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      {reservation.team ? (
+                        <Chip
+                          label={reservation.team.name}
+                          size="small"
+                          sx={{
+                            bgcolor: '#e3f2fd',
+                            color: '#1976d2',
+                            fontWeight: 600
+                          }}
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          Sin equipo
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body1">
+                        {format(new Date(reservation.date), 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es })}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" gap="8px">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenDialog(reservation)}
+                          sx={{ color: '#1976d2' }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDelete(reservation.id)}
+                          sx={{ color: '#d32f2f' }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
 
       {/* Dialog para crear/editar reserva */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
@@ -261,20 +491,24 @@ export default function ReservationsPage() {
           {editingReservation ? 'Editar Reserva' : 'Nueva Reserva'}
         </DialogTitle>
         <DialogContent>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box display="flex" flexDirection="column" gap="16px" mt="8px">
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
               <DatePicker
                 label="Fecha"
                 value={formData.date}
-                onChange={(newValue) => setFormData({ ...formData, date: newValue || new Date() })}
+                onChange={(newValue) => setFormData({ ...formData, date: newValue })}
                 slotProps={{
                   textField: {
-                    fullWidth: true
+                    fullWidth: true,
+                    size: 'small'
                   }
                 }}
               />
+            </LocalizationProvider>
 
-              <FormControl fullWidth>
+            {/* Solo mostrar selector de usuario si es admin o si está editando una reserva */}
+            {(session?.user?.role === 'ADMIN' || editingReservation) ? (
+              <FormControl fullWidth size="small">
                 <InputLabel>Usuario</InputLabel>
                 <Select
                   value={formData.userId}
@@ -283,18 +517,30 @@ export default function ReservationsPage() {
                 >
                   {users.map((user) => (
                     <MenuItem key={user.id} value={user.id}>
-                      {user.name}
+                      {user.name} ({user.email})
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                label="Usuario"
+                value={session?.user?.name || ''}
+                disabled
+                helperText="Tu reserva se creará automáticamente para tu usuario"
+              />
+            )}
 
-              <FormControl fullWidth>
-                <InputLabel>Equipo (Opcional)</InputLabel>
+            {/* Solo mostrar selector de equipo si es admin o si está editando una reserva de otro usuario */}
+            {(session?.user?.role === 'ADMIN' || editingReservation) && (
+              <FormControl fullWidth size="small">
+                <InputLabel>Equipo (opcional)</InputLabel>
                 <Select
                   value={formData.teamId}
                   onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                  label="Equipo (Opcional)"
+                  label="Equipo (opcional)"
                 >
                   <MenuItem value="">
                     <em>Sin equipo</em>
@@ -306,8 +552,8 @@ export default function ReservationsPage() {
                   ))}
                 </Select>
               </FormControl>
-            </Box>
-          </LocalizationProvider>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancelar</Button>
@@ -316,6 +562,6 @@ export default function ReservationsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   )
 } 

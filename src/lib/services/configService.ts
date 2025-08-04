@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from '../prisma'
 
 export interface SystemConfig {
   maxSpotsPerDay: number
@@ -89,10 +89,21 @@ export class ConfigService {
   // Actualizar configuración
   static async updateConfig(data: UpdateConfigData): Promise<SystemConfig> {
     try {
-      const currentConfig = await prisma.systemConfig.findFirst()
+      let currentConfig = await prisma.systemConfig.findFirst()
       
+      // Si no existe configuración, crear una por defecto
       if (!currentConfig) {
-        throw new Error('No existe configuración para actualizar')
+        currentConfig = await prisma.systemConfig.create({
+          data: {
+            maxSpotsPerDay: 12,
+            allowWeekendReservations: false,
+            allowHolidayReservations: false,
+            maxAdvanceBookingDays: 30,
+            minAdvanceBookingHours: 2,
+            autoCancelInactiveReservations: true,
+            inactiveReservationHours: 24,
+          },
+        })
       }
       
       const updatedConfig = await prisma.systemConfig.update({

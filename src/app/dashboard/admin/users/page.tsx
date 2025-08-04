@@ -1,117 +1,119 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import {
+  Box,
   Container,
   Typography,
-  Box,
   Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Button,
   IconButton,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip,
-  Alert,
-  Snackbar,
-  Avatar,
-  Tooltip,
   CircularProgress,
 } from '@mui/material'
 import {
-  Add,
-  Edit,
-  Delete,
-  Search,
-  Visibility,
-  VisibilityOff,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
   Person,
-  Business,
 } from '@mui/icons-material'
-import Navigation from '@/components/Layout/Navigation'
-import { useAdminAuth } from '@/hooks/useAdminAuth'
-import { UserService } from '@/lib/services/userService'
-import { TeamService } from '@/lib/services/teamService'
-import type { UserWithTeam } from '@/lib/services/userService'
-import type { Team } from '@/lib/services/teamService'
 
-interface UserFormData {
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  teamId?: string
+  team?: {
+    id: string
+    name: string
+  }
+}
+
+interface Team {
+  id: string
+  name: string
+  description?: string
+}
+
+interface FormData {
   name: string
   email: string
   password: string
   role: 'ADMIN' | 'MANAGER' | 'USER'
-  teamId?: string
+  teamId: string
 }
 
-export default function AdminUsersPage() {
-  const { session, isAdmin, isLoading } = useAdminAuth()
-  const [users, setUsers] = useState<UserWithTeam[]>([])
+export default function UsersPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [users, setUsers] = useState<User[]>([])
   const [teams, setTeams] = useState<Team[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<UserWithTeam | null>(null)
-  const [formData, setFormData] = useState<UserFormData>({
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     password: '',
     role: 'USER',
     teamId: '',
   })
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'warning' | 'info'
-  })
 
-  // Cargar datos iniciales
   useEffect(() => {
-    if (isAdmin) {
-      loadData()
+    if (status === 'unauthenticated') {
+      router.push('/auth/login')
     }
-  }, [isAdmin])
+  }, [status, router])
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchData()
+    }
+  }, [status])
+
+  const fetchData = async () => {
     try {
       setLoading(true)
-      const [usersData, teamsData] = await Promise.all([
-        UserService.getAllUsers(),
-        TeamService.getSimpleTeams(),
-      ])
-      setUsers(usersData)
-      setTeams(teamsData)
+      const response = await fetch('/api/users')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      setUsers(data.users)
+      setTeams(data.teams)
     } catch (error) {
-      console.error('Error loading data:', error)
-      setSnackbar({
-        open: true,
-        message: 'Error al cargar los datos',
-        severity: 'error'
-      })
+      console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  const handleOpenDialog = (user?: UserWithTeam) => {
+  const handleOpenDialog = (user?: User) => {
     if (user) {
       setEditingUser(user)
       setFormData({
@@ -144,193 +146,238 @@ export default function AdminUsersPage() {
       role: 'USER',
       teamId: '',
     })
-    setShowPassword(false)
   }
 
   const handleSubmit = async () => {
     try {
-      if (editingUser) {
-        // Actualizar usuario existente
-        const updatedUser = await UserService.updateUser(editingUser.id, {
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          teamId: formData.teamId || undefined,
-          ...(formData.password && { password: formData.password }),
-        })
-        
-        setUsers(users.map(user => 
-          user.id === editingUser.id ? updatedUser : user
-        ))
-        
-        setSnackbar({
-          open: true,
-          message: 'Usuario actualizado correctamente',
-          severity: 'success'
-        })
-      } else {
-        // Crear nuevo usuario
-        const newUser = await UserService.createUser({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          teamId: formData.teamId || undefined,
-        })
-        
-        setUsers([newUser, ...users])
-        setSnackbar({
-          open: true,
-          message: 'Usuario creado correctamente',
-          severity: 'success'
-        })
+      if (!formData.name || !formData.email) {
+        alert('Debe completar todos los campos obligatorios')
+        return
       }
-      handleCloseDialog()
-    } catch (error) {
-      console.error('Error submitting user:', error)
-      setSnackbar({
-        open: true,
-        message: error instanceof Error ? error.message : 'Error al procesar la operación',
-        severity: 'error'
+      if (!editingUser && !formData.password) {
+        alert('Debe ingresar una contraseña para nuevos usuarios')
+        return
+      }
+
+      const url = '/api/users'
+      const method = editingUser ? 'PUT' : 'POST'
+      
+      const body = editingUser 
+        ? {
+            id: editingUser.id,
+            name: formData.name,
+            email: formData.email,
+            password: formData.password || undefined,
+            role: formData.role,
+            teamId: formData.teamId || undefined,
+          }
+        : {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            teamId: formData.teamId || undefined,
+          }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert(editingUser ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente')
+      handleCloseDialog()
+      fetchData()
+    } catch (error) {
+      console.error('Error saving user:', error)
+      alert('Error al guardar el usuario')
     }
   }
 
-  const handleDelete = async (userId: string) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      try {
-        await UserService.deleteUser(userId)
-        setUsers(users.filter(user => user.id !== userId))
-        setSnackbar({
-          open: true,
-          message: 'Usuario eliminado correctamente',
-          severity: 'success'
-        })
-      } catch (error) {
-        console.error('Error deleting user:', error)
-        setSnackbar({
-          open: true,
-          message: 'Error al eliminar el usuario',
-          severity: 'error'
-        })
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Está seguro de que desea eliminar este usuario?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users?id=${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      alert('Usuario eliminado exitosamente')
+      fetchData()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Error al eliminar el usuario')
     }
   }
 
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'error'
+        return '#d32f2f'
       case 'MANAGER':
-        return 'warning'
-      case 'USER':
-        return 'primary'
+        return '#f57c00'
       default:
-        return 'default'
+        return '#1976d2'
     }
   }
 
-  const getRoleIcon = (role: string) => {
+  const getRoleLabel = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return <Person />
+        return 'Administrador'
       case 'MANAGER':
-        return <Business />
-      case 'USER':
-        return <Person />
+        return 'Manager'
       default:
-        return <Person />
+        return 'Usuario'
     }
   }
 
-  if (isLoading) {
-    return <div>Cargando...</div>
-  }
-
-  if (!isAdmin) {
-    return null
-  }
-
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
       </Box>
     )
   }
 
+  if (!session) {
+    return null
+  }
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navigation />
-      
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, flex: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Administración de Usuarios
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenDialog()}
-          >
-            Nuevo Usuario
-          </Button>
-        </Box>
+    <Container maxWidth="xl" sx={{ p: 0 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb="32px">
+        <Typography
+          variant="h3"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            color: '#1a1a1a',
+            fontSize: '32px',
+            lineHeight: '40px'
+          }}
+        >
+          Gestión de Usuarios
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={{
+            borderRadius: '12px',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: '24px',
+            py: '12px',
+            fontSize: '14px',
+            lineHeight: '20px',
+            bgcolor: '#1976d2',
+            '&:hover': {
+              bgcolor: '#1565c0'
+            }
+          }}
+        >
+          Nuevo Usuario
+        </Button>
+      </Box>
 
-        {/* Barra de búsqueda */}
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <TextField
-            fullWidth
-            placeholder="Buscar usuarios por nombre, email o rol..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
-            }}
-          />
-        </Paper>
-
-        {/* Tabla de usuarios */}
-        <TableContainer component={Paper}>
+      <Paper
+        sx={{
+          background: '#ffffff',
+          border: '1px solid #e8e8e8',
+          borderRadius: '16px',
+          boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
+          overflow: 'hidden'
+        }}
+      >
+        <TableContainer>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Rol</TableCell>
-                <TableCell>Equipo</TableCell>
-                <TableCell>Fecha de Creación</TableCell>
-                <TableCell align="center">Acciones</TableCell>
+              <TableRow sx={{ bgcolor: '#fafafa' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Usuario</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Rol</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Equipo</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+              {users.map((user) => (
+                <TableRow key={user.id} hover>
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar>
+                    <Box display="flex" alignItems="center" gap="12px">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: '#1976d2',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontWeight: 600,
+                          fontSize: '16px'
+                        }}
+                      >
                         {user.name.charAt(0)}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight="medium">
+                      </Box>
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
                         {user.name}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {user.email}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Chip
-                      icon={getRoleIcon(user.role)}
-                      label={user.role}
-                      color={getRoleColor(user.role)}
+                      label={getRoleLabel(user.role)}
                       size="small"
+                      sx={{
+                        bgcolor: getRoleColor(user.role),
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '11px'
+                      }}
                     />
                   </TableCell>
                   <TableCell>
                     {user.team ? (
                       <Chip
                         label={user.team.name}
-                        color="primary"
                         size="small"
+                        sx={{
+                          bgcolor: '#e3f2fd',
+                          color: '#1976d2',
+                          fontWeight: 600
+                        }}
                       />
                     ) : (
                       <Typography variant="body2" color="text.secondary">
@@ -339,29 +386,21 @@ export default function AdminUsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {new Date(user.createdAt).toLocaleDateString('es-ES')}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                      <Tooltip title="Editar">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(user)}
-                          color="primary"
-                        >
-                          <Edit />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDelete(user.id)}
-                          color="error"
-                          disabled={user.id === session?.user.id}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Tooltip>
+                    <Box display="flex" gap="8px">
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDialog(user)}
+                        sx={{ color: '#1976d2' }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(user.id)}
+                        sx={{ color: '#d32f2f' }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -369,111 +408,83 @@ export default function AdminUsersPage() {
             </TableBody>
           </Table>
         </TableContainer>
+      </Paper>
 
-        {/* Dialog para crear/editar usuario */}
-        <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>
-            {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-              <TextField
-                label="Nombre"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                fullWidth
-                required
-              />
-              
-              <TextField
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                fullWidth
-                required
-              />
-              
-              <TextField
-                label="Contraseña"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                fullWidth
-                required={!editingUser}
-                InputProps={{
-                  endAdornment: (
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  ),
-                }}
-              />
-              
-              <FormControl fullWidth>
-                <InputLabel>Rol</InputLabel>
-                <Select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  label="Rol"
-                >
-                  <MenuItem value="USER">Usuario</MenuItem>
-                  <MenuItem value="MANAGER">Manager</MenuItem>
-                  <MenuItem value="ADMIN">Administrador</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <FormControl fullWidth>
-                <InputLabel>Equipo</InputLabel>
-                <Select
-                  value={formData.teamId}
-                  onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                  label="Equipo"
-                >
-                  <MenuItem value="">
-                    <em>Sin equipo</em>
+      {/* Dialog para crear/editar usuario */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
+        </DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap="16px" mt="8px">
+            <TextField
+              label="Nombre"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              fullWidth
+              size="small"
+              required
+            />
+
+            <TextField
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              fullWidth
+              size="small"
+              required
+            />
+
+            <TextField
+              label={editingUser ? 'Nueva contraseña (dejar vacío para mantener)' : 'Contraseña'}
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              fullWidth
+              size="small"
+              required={!editingUser}
+            />
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Rol</InputLabel>
+              <Select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'ADMIN' | 'MANAGER' | 'USER' })}
+                label="Rol"
+              >
+                <MenuItem value="USER">Usuario</MenuItem>
+                <MenuItem value="MANAGER">Manager</MenuItem>
+                <MenuItem value="ADMIN">Administrador</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth size="small">
+              <InputLabel>Equipo (opcional)</InputLabel>
+              <Select
+                value={formData.teamId}
+                onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
+                label="Equipo (opcional)"
+              >
+                <MenuItem value="">
+                  <em>Sin equipo</em>
+                </MenuItem>
+                {teams.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
                   </MenuItem>
-                  {teams.map((team) => (
-                    <MenuItem key={team.id} value={team.id}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              disabled={!formData.name || !formData.email || (!editingUser && !formData.password)}
-            >
-              {editingUser ? 'Actualizar' : 'Crear'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Snackbar para notificaciones */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
-    </Box>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancelar</Button>
+          <Button onClick={handleSubmit} variant="contained">
+            {editingUser ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   )
 } 

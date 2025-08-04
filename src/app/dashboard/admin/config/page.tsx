@@ -24,18 +24,12 @@ import {
   Settings,
   People,
   CalendarToday,
-  AccessTime,
   Warning,
-  Save,
-  Refresh,
 } from '@mui/icons-material'
-import Navigation from '@/components/Layout/Navigation'
-import { useAdminAuth } from '@/hooks/useAdminAuth'
 import { ConfigService } from '@/lib/services/configService'
 import type { SystemConfig } from '@/lib/services/configService'
 
 export default function AdminConfigPage() {
-  const { session, isAdmin, isLoading } = useAdminAuth()
   const [config, setConfig] = useState<SystemConfig>({
     maxSpotsPerDay: 12,
     allowWeekendReservations: false,
@@ -55,10 +49,8 @@ export default function AdminConfigPage() {
 
   // Cargar configuración inicial
   useEffect(() => {
-    if (isAdmin) {
-      loadConfig()
-    }
-  }, [isAdmin])
+    loadConfig()
+  }, [])
 
   const loadConfig = async () => {
     try {
@@ -98,26 +90,28 @@ export default function AdminConfigPage() {
     }
   }
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm('¿Estás seguro de que quieres restaurar la configuración por defecto?')) {
-      setConfig({
-        maxSpotsPerDay: 12,
-        allowWeekendReservations: false,
-        allowHolidayReservations: false,
-        maxAdvanceBookingDays: 30,
-        minAdvanceBookingHours: 2,
-        autoCancelInactiveReservations: true,
-        inactiveReservationHours: 24,
-      })
+      try {
+        setSaving(true)
+        const defaultConfig = await ConfigService.createDefaultConfig()
+        setConfig(defaultConfig)
+        setSnackbar({
+          open: true,
+          message: 'Configuración restaurada a valores por defecto',
+          severity: 'info'
+        })
+      } catch (error) {
+        console.error('Error resetting config:', error)
+        setSnackbar({
+          open: true,
+          message: 'Error al restaurar la configuración',
+          severity: 'error'
+        })
+      } finally {
+        setSaving(false)
+      }
     }
-  }
-
-  if (isLoading) {
-    return <div>Cargando...</div>
-  }
-
-  if (!isAdmin) {
-    return null
   }
 
   if (loading) {
@@ -130,7 +124,6 @@ export default function AdminConfigPage() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navigation />
       
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4, flex: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -140,14 +133,13 @@ export default function AdminConfigPage() {
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="outlined"
-              startIcon={<Refresh />}
               onClick={handleReset}
+              disabled={saving}
             >
               Restaurar Valores
             </Button>
             <Button
               variant="contained"
-              startIcon={<Save />}
               onClick={handleSave}
               disabled={saving}
             >

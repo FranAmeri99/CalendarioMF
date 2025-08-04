@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from '../prisma'
 import type { Team, User } from '@prisma/client'
 
 export interface TeamWithMembers extends Team {

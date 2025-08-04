@@ -34,7 +34,6 @@ import {
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Reservas', icon: <CalendarToday />, path: '/dashboard/reservations' },
-  { text: 'Personas', icon: <People />, path: '/dashboard/users' },
   { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
   { text: 'Perfil', icon: <Person />, path: '/dashboard/profile' },
 ]
@@ -43,6 +42,9 @@ const menuItems = [
 const adminMenuItems = [
   { text: 'Admin Usuarios', icon: <Settings />, path: '/dashboard/admin/users' },
   { text: 'Configuración', icon: <Settings />, path: '/dashboard/admin/config' },
+  { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
+
+
 ]
 
 export default function Navigation() {

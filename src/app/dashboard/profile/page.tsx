@@ -26,6 +26,9 @@ import {
   Select,
   MenuItem,
   Divider,
+  CircularProgress,
+  Alert,
+  Snackbar,
 } from '@mui/material'
 import {
   Person,
@@ -38,41 +41,30 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import toast from 'react-hot-toast'
+import { UserService } from '@/lib/services/userService'
+import { TeamService } from '@/lib/services/teamService'
+import { ReservationService } from '@/lib/services/reservationService'
+import type { UserWithTeam } from '@/lib/services/userService'
+import type { Team } from '@prisma/client'
+import type { ReservationWithUser } from '@/lib/services/reservationService'
 
-interface UserProfile {
-  id: string
-  name: string
-  email: string
-  role: string
-  team?: {
-    id: string
-    name: string
-  }
-  avatar?: string
-  createdAt: string
-}
-
-interface Reservation {
-  id: string
-  date: string
-  team?: {
-    name: string
-  }
-}
-
-interface Team {
-  id: string
-  name: string
+interface UserProfile extends UserWithTeam {
+  // Extendemos la interfaz si es necesario
 }
 
 export default function ProfilePage() {
   const { data: session } = useSession()
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [reservations, setReservations] = useState<ReservationWithUser[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info'
+  })
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -80,56 +72,48 @@ export default function ProfilePage() {
   })
 
   useEffect(() => {
-    fetchProfileData()
-  }, [])
+    if (session?.user?.email) {
+      fetchProfileData()
+    }
+  }, [session])
 
   const fetchProfileData = async () => {
     try {
-      // Aquí se harían las llamadas a la API
-      // Por ahora usamos datos de ejemplo
-      setProfile({
-        id: '1',
-        name: 'Juan Pérez',
-        email: 'juan@example.com',
-        role: 'ADMIN',
-        team: { id: '1', name: 'Desarrollo' },
-        createdAt: '2024-01-01',
-      })
-
-      setReservations([
-        {
-          id: '1',
-          date: '2024-01-15',
-          team: { name: 'Desarrollo' },
-        },
-        {
-          id: '2',
-          date: '2024-01-16',
-          team: { name: 'Desarrollo' },
-        },
-        {
-          id: '3',
-          date: '2024-01-17',
-          team: { name: 'Desarrollo' },
-        },
-      ])
-
-      setTeams([
-        { id: '1', name: 'Desarrollo' },
-        { id: '2', name: 'Diseño' },
-        { id: '3', name: 'Marketing' },
-      ])
-
-      if (profile) {
-        setFormData({
-          name: profile.name,
-          email: profile.email,
-          teamId: profile.team?.id || '',
-        })
+      setLoading(true)
+      
+      // Obtener datos del usuario actual
+      const userEmail = session?.user?.email
+      if (!userEmail) {
+        throw new Error('No se encontró el email del usuario')
       }
+
+      const userData = await UserService.getUserByEmail(userEmail)
+      if (!userData) {
+        throw new Error('Usuario no encontrado')
+      }
+
+      const [teamsData, reservationsData] = await Promise.all([
+        TeamService.getSimpleTeams(),
+        ReservationService.getReservationsByUser(userData.id),
+      ])
+
+      setProfile(userData)
+      setTeams(teamsData)
+      setReservations(reservationsData)
+
+      // Inicializar formulario
+      setFormData({
+        name: userData.name,
+        email: userData.email,
+        teamId: userData.teamId || '',
+      })
     } catch (error) {
       console.error('Error fetching profile data:', error)
-      toast.error('Error al cargar los datos del perfil')
+      setSnackbar({
+        open: true,
+        message: 'Error al cargar los datos del perfil',
+        severity: 'error'
+      })
     } finally {
       setLoading(false)
     }
@@ -140,7 +124,7 @@ export default function ProfilePage() {
       setFormData({
         name: profile.name,
         email: profile.email,
-        teamId: profile.team?.id || '',
+        teamId: profile.teamId || '',
       })
     }
     setEditMode(true)
@@ -148,22 +132,62 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setEditMode(false)
+    // Restaurar datos originales
+    if (profile) {
+      setFormData({
+        name: profile.name,
+        email: profile.email,
+        teamId: profile.teamId || '',
+      })
+    }
   }
 
   const handleSave = async () => {
     try {
       if (!formData.name || !formData.email) {
-        toast.error('Debe completar todos los campos obligatorios')
+        setSnackbar({
+          open: true,
+          message: 'Debe completar todos los campos obligatorios',
+          severity: 'error'
+        })
         return
       }
 
-      // Aquí se haría la llamada a la API
-      toast.success('Perfil actualizado exitosamente')
+      if (!profile) {
+        setSnackbar({
+          open: true,
+          message: 'No se encontró el perfil del usuario',
+          severity: 'error'
+        })
+        return
+      }
+
+      setSaving(true)
+
+      // Actualizar usuario
+      const updatedUser = await UserService.updateUser(profile.id, {
+        name: formData.name,
+        email: formData.email,
+        teamId: formData.teamId || undefined,
+      })
+
+      setProfile(updatedUser)
       setEditMode(false)
-      fetchProfileData()
+      
+      setSnackbar({
+        open: true,
+        message: 'Perfil actualizado exitosamente',
+        severity: 'success'
+      })
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('Error al actualizar el perfil')
+      setSnackbar({
+        open: true,
+        message: 'Error al actualizar el perfil',
+        severity: 'error'
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -178,10 +202,21 @@ export default function ProfilePage() {
     }
   }
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'Administrador'
+      case 'MANAGER':
+        return 'Manager'
+      default:
+        return 'Usuario'
+    }
+  }
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Cargando perfil...</Typography>
+        <CircularProgress />
       </Box>
     )
   }
@@ -189,9 +224,9 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
-          Perfil no encontrado
-        </Typography>
+        <Alert severity="error">
+          No se pudo cargar el perfil del usuario
+        </Alert>
       </Box>
     )
   }
@@ -214,17 +249,19 @@ export default function ProfilePage() {
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
-                              startIcon={<Close />}
+              startIcon={<Close />}
               onClick={handleCancel}
+              disabled={saving}
             >
               Cancelar
             </Button>
             <Button
               variant="contained"
-                              startIcon={<Check />}
+              startIcon={<Check />}
               onClick={handleSave}
+              disabled={saving}
             >
-              Guardar
+              {saving ? 'Guardando...' : 'Guardar'}
             </Button>
           </Box>
         )}
@@ -248,6 +285,7 @@ export default function ProfilePage() {
                     label="Nombre"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    size="small"
                   />
                   <TextField
                     fullWidth
@@ -255,8 +293,9 @@ export default function ProfilePage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    size="small"
                   />
-                  <FormControl fullWidth>
+                  <FormControl fullWidth size="small">
                     <InputLabel>Equipo</InputLabel>
                     <Select
                       value={formData.teamId}
@@ -283,7 +322,7 @@ export default function ProfilePage() {
                     {profile.email}
                   </Typography>
                   <Chip
-                    label={profile.role}
+                    label={getRoleLabel(profile.role)}
                     color={getRoleColor(profile.role)}
                     size="small"
                     sx={{ mb: 1 }}
@@ -295,6 +334,9 @@ export default function ProfilePage() {
                       sx={{ ml: 1 }}
                     />
                   )}
+                  <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                    Miembro desde: {new Date(profile.createdAt).toLocaleDateString('es-ES')}
+                  </Typography>
                 </Box>
               )}
             </Box>
@@ -368,7 +410,7 @@ export default function ProfilePage() {
                 <Card>
                   <CardContent>
                     <Typography variant="h4" color="primary">
-                      {Math.round((reservations.length / 30) * 100)}%
+                      {reservations.length > 0 ? Math.round((reservations.filter(r => new Date(r.date) < new Date()).length / reservations.length) * 100) : 0}%
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Tasa de Asistencia
@@ -380,6 +422,21 @@ export default function ProfilePage() {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Snackbar para notificaciones */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 } 

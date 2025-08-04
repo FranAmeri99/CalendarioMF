@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from '../prisma'
 import type { Reservation, User, Team } from '@prisma/client'
 
 export interface ReservationWithUser extends Reservation {
@@ -22,6 +22,8 @@ export class ReservationService {
   // Obtener todas las reservas con usuarios y equipos
   static async getAllReservations(): Promise<ReservationWithUser[]> {
     try {
+      console.log('🔄 Obteniendo reservas...')
+      
       const reservations = await prisma.reservation.findMany({
         include: {
           user: true,
@@ -31,10 +33,12 @@ export class ReservationService {
           date: 'desc',
         },
       })
+      
+      console.log(`✅ Reservas obtenidas: ${reservations.length}`)
       return reservations
     } catch (error) {
-      console.error('Error fetching reservations:', error)
-      throw new Error('Error al obtener reservas')
+      console.error('❌ Error fetching reservations:', error)
+      throw new Error(`Error al obtener reservas: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
 
