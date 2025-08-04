@@ -17,7 +17,7 @@ export async function GET() {
     const maxSpots = config?.maxSpotsPerDay || 12
     const today = dayjs().startOf('day')
     
-    const todayReservations = (reservations as ReservationWithUser[]).filter(r => {
+    const todayReservations = (reservations as any[]).filter(r => {
       const reservationDate = dayjs(r.date).startOf('day')
       return reservationDate.isSame(today, 'day')
     })
