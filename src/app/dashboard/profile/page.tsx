@@ -82,6 +82,7 @@ export default function ProfilePage() {
     name: '',
     email: '',
     teamId: '',
+    password: '', // nuevo campo
   })
 
   useEffect(() => {
@@ -124,6 +125,7 @@ export default function ProfilePage() {
         name: userData.name,
         email: userData.email,
         teamId: userData.teamId || '',
+        password: '',
       })
     } catch (error) {
       console.error('Error fetching profile data:', error)
@@ -143,6 +145,7 @@ export default function ProfilePage() {
         name: profile.name,
         email: profile.email,
         teamId: profile.teamId || '',
+        password: '', // limpiar campo de password
       })
     }
     setEditMode(true)
@@ -155,6 +158,7 @@ export default function ProfilePage() {
         name: profile.name,
         email: profile.email,
         teamId: profile.teamId || '',
+        password: '',
       })
     }
   }
@@ -182,16 +186,20 @@ export default function ProfilePage() {
       setSaving(true)
 
       // Actualizar usuario
+      const body: any = {
+        name: formData.name,
+        email: formData.email,
+        teamId: formData.teamId || undefined,
+      }
+      if (formData.password) {
+        body['password'] = formData.password
+      }
       const response = await fetch(`/api/users/${profile.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          teamId: formData.teamId || undefined,
-        }),
+        body: JSON.stringify(body),
       })
 
       if (response.ok) {
@@ -322,6 +330,16 @@ export default function ProfilePage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     size="small"
+                  />
+                  <TextField
+                    fullWidth
+                    label="Nueva contraseña"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    size="small"
+                    autoComplete="new-password"
+                    helperText="Déjalo vacío si no quieres cambiarla"
                   />
                   <FormControl fullWidth size="small">
                     <InputLabel>Equipo</InputLabel>
