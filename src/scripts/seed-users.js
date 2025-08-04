@@ -125,6 +125,28 @@ async function seedUsers() {
       })
     }
 
+    // Crear configuración del sistema
+    console.log('⚙️ Verificando configuración del sistema...')
+    const existingConfig = await prisma.systemConfig.findFirst()
+    
+    if (!existingConfig) {
+      const systemConfig = await prisma.systemConfig.create({
+        data: {
+          name: 'Configuración Principal',
+          maxSpotsPerDay: 12,
+          allowWeekendReservations: false,
+          allowHolidayReservations: false,
+          maxAdvanceBookingDays: 30,
+          minAdvanceBookingHours: 2,
+          autoCancelInactiveReservations: true,
+          inactiveReservationHours: 24,
+        },
+      })
+      console.log(`✅ Configuración del sistema creada: ${systemConfig.name}`)
+    } else {
+      console.log(`ℹ️ Configuración del sistema ya existe: ${existingConfig.name}`)
+    }
+
     console.log('🎉 Seed completado exitosamente!')
     console.log('\n📋 Credenciales de acceso:')
     console.log('👑 Admin: admin@empresa.com / admin123')
