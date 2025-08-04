@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ReservationService } from '@/lib/services/reservationService'
+import { ReservationService, type ReservationWithUser } from '@/lib/services/reservationService'
 import { UserService } from '@/lib/services/userService'
 import { TeamService } from '@/lib/services/teamService'
 import { ConfigService } from '@/lib/services/configService'
+import dayjs from 'dayjs'
 
 export async function GET() {
   try {
@@ -14,13 +15,11 @@ export async function GET() {
     ])
 
     const maxSpots = config?.maxSpotsPerDay || 12
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = dayjs().startOf('day')
     
-    const todayReservations = reservations.filter(r => {
-      const reservationDate = new Date(r.date)
-      reservationDate.setHours(0, 0, 0, 0)
-      return reservationDate.getTime() === today.getTime()
+    const todayReservations = (reservations as ReservationWithUser[]).filter(r => {
+      const reservationDate = dayjs(r.date).startOf('day')
+      return reservationDate.isSame(today, 'day')
     })
 
     const reservedSpots = todayReservations.length
@@ -28,7 +27,7 @@ export async function GET() {
 
     const stats = {
       totalUsers: userStats.totalUsers,
-      totalTeams: userStats.totalTeams,
+      totalTeams: teams.length,
       totalReservations: reservations.length,
       availableSpots,
       reservedSpots,

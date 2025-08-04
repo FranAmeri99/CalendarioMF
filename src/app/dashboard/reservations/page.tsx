@@ -44,7 +44,6 @@ import {
   Delete as DeleteIcon,
   CalendarToday,
 } from '@mui/icons-material'
-import { format } from 'date-fns'
 import UntitledCalendar from '@/components/Calendar/UntitledCalendar'
 
 interface Reservation {
