@@ -51,6 +51,7 @@ interface Reservation {
   date: string
   userId: string
   teamId?: string
+  status?: 'confirmed' | 'pending' | 'cancelled'
   user: {
     id: string
     name: string
@@ -126,7 +127,12 @@ export default function ReservationsPage() {
         throw new Error(data.error)
       }
 
-      setReservations(data.reservations)
+      // Asegurar que todas las reservas tengan el campo status
+      const reservationsWithStatus = data.reservations.map((reservation: any) => ({
+        ...reservation,
+        status: reservation.status || 'confirmed'
+      }))
+      setReservations(reservationsWithStatus)
       setUsers(data.users)
       setTeams(data.teams)
     } catch (error) {
