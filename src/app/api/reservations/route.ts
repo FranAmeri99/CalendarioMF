@@ -33,15 +33,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 POST /api/reservations iniciado')
+    
     const body = await request.json()
+    console.log('🔍 Body recibido:', body)
+    
     const { date, userId, teamId } = body
 
     if (!date || !userId) {
+      console.log('❌ Faltan campos requeridos')
       return NextResponse.json(
         { error: 'Fecha y usuario son requeridos' },
         { status: 400 }
       )
     }
+
+    console.log('🔍 Validación pasada, procesando fecha...')
 
     // Convertir la fecha a formato completo con hora 12:00:00 UTC
     let reservationDate: Date
@@ -65,15 +72,25 @@ export async function POST(request: NextRequest) {
     console.log(`  - Fecha recibida: ${date}`)
     console.log(`  - Fecha procesada: ${reservationDate.toISOString()}`)
 
-    const reservation = await ReservationService.createReservation({
-      date: reservationDate,
-      userId,
-      teamId: teamId || undefined,
+    // Crear la reserva directamente con Prisma para evitar problemas con el servicio
+    const { prisma } = await import('@/lib/prisma')
+    
+    const reservation = await prisma.reservation.create({
+      data: {
+        date: reservationDate,
+        userId,
+        teamId: teamId || null,
+      },
+      include: {
+        user: true,
+        team: true,
+      },
     })
 
+    console.log('✅ Reserva creada exitosamente')
     return NextResponse.json({ reservation })
   } catch (error) {
-    console.error('Error creating reservation:', error)
+    console.error('❌ Error creating reservation:', error)
     return NextResponse.json(
       { error: 'Error al crear la reserva' },
       { status: 500 }
