@@ -34,6 +34,7 @@ import {
 
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
+  { text: 'Calendario Unificado', icon: <CalendarToday />, path: '/dashboard/unified-calendar' },
   { text: 'Reservas', icon: <CalendarToday />, path: '/dashboard/reservations' },
   { text: 'Salas de Reuniones', icon: <Home />, path: '/dashboard/meeting-rooms' },
   { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
