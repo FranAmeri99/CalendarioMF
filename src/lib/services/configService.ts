@@ -71,7 +71,7 @@ export class ConfigService {
     try {
       const defaultConfig = await prisma.systemConfig.create({
         data: {
-          // name: 'Configuración Principal', // Temporal hasta regenerar Prisma
+          name: 'Configuración Principal',
           maxSpotsPerDay: 12,
           allowWeekendReservations: false,
           allowHolidayReservations: false,
@@ -109,9 +109,9 @@ export class ConfigService {
       // Si no existe configuración, crear una por defecto
       if (!currentConfig) {
         currentConfig = await prisma.systemConfig.create({
-                  data: {
-          // name: 'Configuración Principal', // Temporal hasta regenerar Prisma
-          maxSpotsPerDay: 12,
+          data: {
+            name: 'Configuración Principal',
+            maxSpotsPerDay: 12,
             allowWeekendReservations: false,
             allowHolidayReservations: false,
             maxAdvanceBookingDays: 30,
