@@ -36,11 +36,29 @@ interface Booking {
   }
 }
 
+interface AttendanceReservation {
+  id: string
+  date: string
+  userId: string
+  teamId?: string
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+  team?: {
+    id: string
+    name: string
+  }
+}
+
 export default function MeetingRoomCalendar() {
   const { data: session } = useSession()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [meetingRooms, setMeetingRooms] = useState<MeetingRoom[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [attendanceReservations, setAttendanceReservations] = useState<AttendanceReservation[]>([])
+  const [maxSpotsPerDay, setMaxSpotsPerDay] = useState(12)
   const [loading, setLoading] = useState(true)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -52,9 +70,10 @@ export default function MeetingRoomCalendar() {
 
   const fetchData = async () => {
     try {
-      const [roomsResponse, bookingsResponse] = await Promise.all([
+      const [roomsResponse, bookingsResponse, calendarResponse] = await Promise.all([
         fetch('/api/meeting-rooms'),
-        fetch('/api/meeting-room-bookings')
+        fetch('/api/meeting-room-bookings'),
+        fetch('/api/calendar')
       ])
 
       if (roomsResponse.ok) {
@@ -65,6 +84,14 @@ export default function MeetingRoomCalendar() {
       if (bookingsResponse.ok) {
         const bookingsData = await bookingsResponse.json()
         setBookings(bookingsData)
+      }
+
+      if (calendarResponse.ok) {
+        const calendarData = await calendarResponse.json()
+        setAttendanceReservations(calendarData.reservations || [])
+        if (calendarData.config?.maxSpotsPerDay) {
+          setMaxSpotsPerDay(calendarData.config.maxSpotsPerDay)
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -109,6 +136,15 @@ export default function MeetingRoomCalendar() {
       const bookingDate = new Date(booking.startTime)
       const bookingDateStr = bookingDate.toLocaleDateString('en-CA')
       return bookingDateStr === dateStr
+    })
+  }
+
+  const getAttendanceReservationsForDate = (date: Date) => {
+    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD
+    return attendanceReservations.filter(reservation => {
+      const reservationDate = new Date(reservation.date)
+      const reservationDateStr = reservationDate.toLocaleDateString('en-CA')
+      return reservationDateStr === dateStr
     })
   }
 
@@ -267,6 +303,7 @@ export default function MeetingRoomCalendar() {
               }
 
               const dayBookings = getBookingsForDate(day)
+              const dayAttendanceReservations = getAttendanceReservationsForDate(day)
               const isToday = day.toLocaleDateString('en-CA') === today
               const isCurrentMonth = day.getMonth() === currentDate.getMonth()
 
@@ -282,14 +319,22 @@ export default function MeetingRoomCalendar() {
                     <span className={`text-sm font-medium ${isToday ? 'text-blue-600' : ''}`}>
                       {day.getDate()}
                     </span>
-                    {dayBookings.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {dayBookings.length}
-                      </Badge>
-                    )}
+                    <div className="flex gap-1">
+                      {dayBookings.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {dayBookings.length} sala{dayBookings.length > 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                      {dayAttendanceReservations.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {dayAttendanceReservations.length}/{maxSpotsPerDay}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-1">
+                    {/* Reservas de salas de reuniones */}
                     {dayBookings.slice(0, 2).map((booking) => (
                       <div
                         key={booking.id}
@@ -328,9 +373,35 @@ export default function MeetingRoomCalendar() {
                         </div>
                       </div>
                     ))}
-                    {dayBookings.length > 2 && (
+                    
+                    {/* Reservas de asistencia */}
+                    {dayAttendanceReservations.slice(0, 2).map((reservation) => (
+                      <div
+                        key={reservation.id}
+                        className="p-1 rounded text-xs bg-green-50 border-l-2 border-green-500"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-green-700" title={reservation.user.name}>
+                              {reservation.user.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              Asistencia
+                            </p>
+                            {reservation.team && (
+                              <p className="text-xs text-muted-foreground truncate">
+                                {reservation.team.name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Mostrar contador si hay más reservas */}
+                    {(dayBookings.length + dayAttendanceReservations.length) > 4 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{dayBookings.length - 2} más
+                        +{(dayBookings.length + dayAttendanceReservations.length) - 4} más
                       </p>
                     )}
                   </div>
@@ -341,22 +412,37 @@ export default function MeetingRoomCalendar() {
         </CardContent>
       </Card>
 
-      {/* Leyenda de salas */}
+      {/* Leyenda */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="text-lg">Leyenda de Salas</CardTitle>
+          <CardTitle className="text-lg">Leyenda</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {meetingRooms.filter(room => room.isActive).map((room, index) => (
-              <div key={room.id} className="flex items-center gap-2">
-                <div
-                  className="w-4 h-4 rounded"
-                  style={{ backgroundColor: getRoomColor(room.id) }}
-                />
-                <span className="text-sm font-medium">{room.name}</span>
+            {/* Leyenda de salas */}
+            <div className="col-span-full">
+              <h4 className="text-sm font-medium mb-2">Salas de Reuniones</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {meetingRooms.filter(room => room.isActive).map((room, index) => (
+                  <div key={room.id} className="flex items-center gap-2">
+                    <div
+                      className="w-4 h-4 rounded"
+                      style={{ backgroundColor: getRoomColor(room.id) }}
+                    />
+                    <span className="text-sm font-medium">{room.name}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            
+            {/* Leyenda de asistencia */}
+            <div className="col-span-full mt-4">
+              <h4 className="text-sm font-medium mb-2">Asistencia</h4>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-green-50 border-l-2 border-green-500"></div>
+                <span className="text-sm font-medium">Reservas de Asistencia</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
