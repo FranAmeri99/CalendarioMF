@@ -11,9 +11,13 @@ import { Business } from '@mui/icons-material'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import updateLocale from 'dayjs/plugin/updateLocale'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 
-// Configurar dayjs con locale español
+// Configurar dayjs con locale español y zona horaria
 dayjs.extend(updateLocale)
+dayjs.extend(utc)
+dayjs.extend(timezone)
 dayjs.locale('es')
 
 interface Reservation {
@@ -38,14 +42,14 @@ interface WeeklyOccupationProps {
 }
 
 export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccupationProps) {
-  const today = dayjs().startOf('day')
+  const today = dayjs().tz('America/Argentina/Buenos_Aires').startOf('day')
   const startOfCurrentWeek = today.startOf('week') // Lunes como inicio de semana
 
   const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).add(i, 'day'))
 
   const getReservationsForDay = (date: dayjs.Dayjs) => {
     const dayReservations = reservations.filter(reservation => {
-      const reservationDate = dayjs(reservation.date).startOf('day')
+      const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires').startOf('day')
       const compareDate = date.startOf('day')
       const isSame = compareDate.isSame(reservationDate, 'day')
       
