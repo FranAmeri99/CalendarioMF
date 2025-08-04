@@ -1,28 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MeetingRoomService } from '@/lib/services/meetingRoomService'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 GET /api/meeting-room-bookings - Iniciando...')
+    
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
     const meetingRoomId = searchParams.get('meetingRoomId')
 
+    console.log('🔍 Parámetros:', { userId, meetingRoomId })
+
+    let bookings
+
     if (userId) {
-      const bookings = await MeetingRoomService.getBookingsByUser(userId)
-      return NextResponse.json(bookings)
+      console.log('🔍 Buscando reservas por usuario:', userId)
+      bookings = await prisma.meetingRoomBooking.findMany({
+        where: { userId },
+        include: {
+          user: true,
+          meetingRoom: true,
+        },
+        orderBy: {
+          startTime: 'desc',
+        },
+      })
+    } else if (meetingRoomId) {
+      console.log('🔍 Buscando reservas por sala:', meetingRoomId)
+      bookings = await prisma.meetingRoomBooking.findMany({
+        where: { meetingRoomId },
+        include: {
+          user: true,
+          meetingRoom: true,
+        },
+        orderBy: {
+          startTime: 'asc',
+        },
+      })
+    } else {
+      console.log('🔍 Buscando todas las reservas')
+      bookings = await prisma.meetingRoomBooking.findMany({
+        include: {
+          user: true,
+          meetingRoom: true,
+        },
+        orderBy: {
+          startTime: 'desc',
+        },
+      })
     }
 
-    if (meetingRoomId) {
-      const bookings = await MeetingRoomService.getBookingsByMeetingRoom(meetingRoomId)
-      return NextResponse.json(bookings)
-    }
-
-    const bookings = await MeetingRoomService.getAllBookings()
+    console.log('✅ Reservas encontradas:', bookings.length)
     return NextResponse.json(bookings)
   } catch (error) {
-    console.error('Error fetching bookings:', error)
+    console.error('❌ Error en GET /api/meeting-room-bookings:', error)
     return NextResponse.json(
-      { error: 'Error al obtener reservas' },
+      { error: 'Error al obtener reservas', details: error instanceof Error ? error.message : 'Error desconocido' },
       { status: 500 }
     )
   }
@@ -59,16 +92,58 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const booking = await MeetingRoomService.createBooking({
-      title,
-      description,
-      startTime: start,
-      endTime: end,
-      userId,
-      meetingRoomId,
+    // Verificar conflictos
+    const conflictingBooking = await prisma.meetingRoomBooking.findFirst({
+      where: {
+        meetingRoomId,
+        OR: [
+          {
+            startTime: {
+              lt: end,
+              gte: start,
+            },
+          },
+          {
+            endTime: {
+              gt: start,
+              lte: end,
+            },
+          },
+          {
+            startTime: {
+              lte: start,
+            },
+            endTime: {
+              gte: end,
+            },
+          },
+        ],
+      },
     })
 
-    return NextResponse.json({ booking })
+    if (conflictingBooking) {
+      return NextResponse.json(
+        { error: 'Ya existe una reserva para este horario en esta sala' },
+        { status: 400 }
+      )
+    }
+
+    const booking = await prisma.meetingRoomBooking.create({
+      data: {
+        title,
+        description,
+        startTime: start,
+        endTime: end,
+        userId,
+        meetingRoomId,
+      },
+      include: {
+        user: true,
+        meetingRoom: true,
+      },
+    })
+
+    return NextResponse.json(booking)
   } catch (error) {
     console.error('Error creating booking:', error)
     return NextResponse.json(
@@ -98,8 +173,15 @@ export async function PUT(request: NextRequest) {
     if (userId) updateData.userId = userId
     if (meetingRoomId) updateData.meetingRoomId = meetingRoomId
 
-    const booking = await MeetingRoomService.updateBooking(id, updateData)
-    return NextResponse.json({ booking })
+    const booking = await prisma.meetingRoomBooking.update({
+      where: { id },
+      data: updateData,
+      include: {
+        user: true,
+        meetingRoom: true,
+      },
+    })
+    return NextResponse.json(booking)
   } catch (error) {
     console.error('Error updating booking:', error)
     return NextResponse.json(
@@ -121,7 +203,9 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await MeetingRoomService.deleteBooking(id)
+    await prisma.meetingRoomBooking.delete({
+      where: { id },
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting booking:', error)
