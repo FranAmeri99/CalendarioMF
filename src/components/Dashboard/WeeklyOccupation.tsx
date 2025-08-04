@@ -10,8 +10,10 @@ import {
 import { Business } from '@mui/icons-material'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
+import updateLocale from 'dayjs/plugin/updateLocale'
 
 // Configurar dayjs con locale español
+dayjs.extend(updateLocale)
 dayjs.locale('es')
 
 interface Reservation {
@@ -118,7 +120,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                       textTransform: 'capitalize'
                     }}
                   >
-                    {day.format('EEEE')}
+                    {day.format('dddd')}
                   </Typography>
                   <Typography
                     variant="caption"
