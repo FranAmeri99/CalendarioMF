@@ -59,4 +59,19 @@ model Reservation {
 
   @@unique([date, userId])
   @@map("reservations")
+}
+
+model SystemConfig {
+  id                              String @id @default(cuid())
+  maxSpotsPerDay                  Int    @default(12)
+  allowWeekendReservations        Boolean @default(false)
+  allowHolidayReservations        Boolean @default(false)
+  maxAdvanceBookingDays           Int    @default(30)
+  minAdvanceBookingHours          Int    @default(2)
+  autoCancelInactiveReservations  Boolean @default(true)
+  inactiveReservationHours        Int    @default(24)
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+
+  @@map("system_config")
 } 

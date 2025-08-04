@@ -28,6 +28,7 @@ import CalendarStats from '@/components/Calendar/CalendarStats'
 import { ReservationService } from '@/lib/services/reservationService'
 import { UserService } from '@/lib/services/userService'
 import { TeamService } from '@/lib/services/teamService'
+import { ConfigService } from '@/lib/services/configService'
 import type { ReservationWithUser } from '@/lib/services/reservationService'
 
 interface DashboardStats {
@@ -67,11 +68,12 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const [reservationsData, userStats, teamStats, reservationStats] = await Promise.all([
+      const [reservationsData, userStats, teamStats, reservationStats, config] = await Promise.all([
         ReservationService.getAllReservations(),
         UserService.getUserStats(),
         TeamService.getSimpleTeams(),
         ReservationService.getReservationStats(),
+        ConfigService.getConfig(),
       ])
 
       setReservations(reservationsData)
@@ -79,7 +81,7 @@ export default function Dashboard() {
         totalUsers: userStats.totalUsers,
         totalTeams: teamStats.length,
         totalReservations: reservationStats.totalReservations,
-        availableSpots: 12 - reservationStats.todayReservations, // 12 lugares por día
+        availableSpots: config.maxSpotsPerDay - reservationStats.todayReservations,
         reservedSpots: reservationStats.todayReservations,
       })
     } catch (error) {

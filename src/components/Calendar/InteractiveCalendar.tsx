@@ -39,6 +39,11 @@ interface InteractiveCalendarProps {
   onDayClick?: (date: Date) => void
   onReservationClick?: (reservation: ReservationWithUser) => void
   maxSpotsPerDay?: number
+  config?: {
+    maxSpotsPerDay: number
+    allowWeekendReservations: boolean
+    allowHolidayReservations: boolean
+  }
 }
 
 export default function InteractiveCalendar({

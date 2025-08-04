@@ -225,7 +225,9 @@ export class ReservationService {
         },
       })
 
-      const maxSpots = 12 // Configurable
+      // Obtener configuración dinámica
+      const { ConfigService } = await import('./configService')
+      const maxSpots = await ConfigService.getMaxSpotsPerDay()
       const available = reservedCount < maxSpots
 
       return {

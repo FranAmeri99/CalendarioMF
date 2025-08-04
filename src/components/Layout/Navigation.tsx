@@ -42,6 +42,7 @@ const menuItems = [
 // Menú de administración solo para admins
 const adminMenuItems = [
   { text: 'Admin Usuarios', icon: <Settings />, path: '/dashboard/admin/users' },
+  { text: 'Configuración', icon: <Settings />, path: '/dashboard/admin/config' },
 ]
 
 export default function Navigation() {
