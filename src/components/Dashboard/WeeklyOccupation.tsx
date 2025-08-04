@@ -45,13 +45,19 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
   const today = dayjs().tz('America/Argentina/Buenos_Aires').startOf('day')
   const startOfCurrentWeek = today.startOf('week') // Lunes como inicio de semana
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).add(i, 'day'))
+  const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).tz('America/Argentina/Buenos_Aires').add(i, 'day'))
 
   // Debug: mostrar todas las reservas
   console.log('🔍 WeeklyOccupation - Todas las reservas:')
   reservations.forEach((reservation, index) => {
     const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires')
     console.log(`  ${index + 1}. ${reservation.user.name} - ${reservationDate.format('YYYY-MM-DD HH:mm:ss')} (${reservation.date})`)
+  })
+
+  // Debug: mostrar los días de la semana generados
+  console.log('🔍 WeeklyOccupation - Días de la semana:')
+  weekDays.forEach((day, index) => {
+    console.log(`  ${index + 1}. ${day.format('dddd')} - ${day.format('YYYY-MM-DD HH:mm:ss')}`)
   })
 
   const getReservationsForDay = (date: dayjs.Dayjs) => {
