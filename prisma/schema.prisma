@@ -18,6 +18,7 @@ model User {
   updatedAt    DateTime      @updatedAt
   teamId       String?
   reservations Reservation[]
+  meetingRoomBookings MeetingRoomBooking[]
   teamMembers  Team[]        @relation("TeamMembers")
   team         Team?         @relation(fields: [teamId], references: [id])
 
@@ -66,4 +67,33 @@ model SystemConfig {
   updatedAt                      DateTime @updatedAt
 
   @@map("system_config")
+}
+
+model MeetingRoom {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  capacity    Int      @default(10)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  bookings    MeetingRoomBooking[]
+
+  @@map("meeting_rooms")
+}
+
+model MeetingRoomBooking {
+  id            String      @id @default(cuid())
+  title         String
+  description  String?
+  startTime     DateTime
+  endTime       DateTime
+  userId        String
+  meetingRoomId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meetingRoom   MeetingRoom @relation(fields: [meetingRoomId], references: [id], onDelete: Cascade)
+
+  @@map("meeting_room_bookings")
 }

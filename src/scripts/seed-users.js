@@ -147,6 +147,26 @@ async function seedUsers() {
       console.log(`ℹ️ Configuración del sistema ya existe: ${existingConfig.name}`)
     }
 
+    // Crear sala de reuniones por defecto
+    console.log('🏢 Verificando sala de reuniones...')
+    const existingMeetingRoom = await prisma.meetingRoom.findUnique({
+      where: { name: 'Sala de Reuniones Principal' }
+    })
+    
+    if (!existingMeetingRoom) {
+      const meetingRoom = await prisma.meetingRoom.create({
+        data: {
+          name: 'Sala de Reuniones Principal',
+          description: 'Sala principal para reuniones y presentaciones',
+          capacity: 15,
+          isActive: true,
+        },
+      })
+      console.log(`✅ Sala de reuniones creada: ${meetingRoom.name}`)
+    } else {
+      console.log(`ℹ️ Sala de reuniones ya existe: ${existingMeetingRoom.name}`)
+    }
+
     console.log('🎉 Seed completado exitosamente!')
     console.log('\n📋 Credenciales de acceso:')
     console.log('👑 Admin: admin@empresa.com / admin123')

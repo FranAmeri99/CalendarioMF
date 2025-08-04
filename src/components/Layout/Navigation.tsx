@@ -29,11 +29,13 @@ import {
   Person,
   ExitToApp,
   Settings,
+  Home,
 } from '@mui/icons-material'
 
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Reservas', icon: <CalendarToday />, path: '/dashboard/reservations' },
+  { text: 'Salas de Reuniones', icon: <Home />, path: '/dashboard/meeting-rooms' },
   { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
   { text: 'Perfil', icon: <Person />, path: '/dashboard/profile' },
 ]
