@@ -34,6 +34,10 @@ export async function GET() {
       const reservationDate = dayjs(r.date).tz('America/Argentina/Buenos_Aires').startOf('day')
       const isToday = reservationDate.isSame(today, 'day')
       console.log(`Reservation ${r.id}: ${r.date} -> ${reservationDate.format('YYYY-MM-DD')} isToday: ${isToday}`)
+      console.log(`  - Original date: ${r.date}`)
+      console.log(`  - Argentina date: ${reservationDate.format('YYYY-MM-DD HH:mm:ss')}`)
+      console.log(`  - Today: ${today.format('YYYY-MM-DD HH:mm:ss')}`)
+      console.log(`  - Is same day: ${isToday}`)
       return isToday
     })
 
