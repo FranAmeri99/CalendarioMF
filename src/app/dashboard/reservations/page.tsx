@@ -98,7 +98,7 @@ export default function ReservationsPage() {
     teamId: '',
   })
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
-  const [maxSpots, setMaxSpots] = useState(18) // Valor por defecto que se actualizará con la configuración real
+  const [maxSpots, setMaxSpots] = useState(20) // Valor por defecto que se actualizará con la configuración real
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   useEffect(() => {
@@ -117,37 +117,29 @@ export default function ReservationsPage() {
     try {
       setLoading(true)
       
-      // Obtener datos de reservas y configuración en paralelo
-      const [reservationsResponse, configResponse] = await Promise.all([
-        fetch('/api/reservations'),
-        fetch('/api/config')
-      ])
+      // Obtener todos los datos del calendario en una sola llamada
+      const response = await fetch('/api/calendar')
       
-      if (!reservationsResponse.ok) {
-        throw new Error(`HTTP error! status: ${reservationsResponse.status}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      const reservationsData = await reservationsResponse.json()
+      const data = await response.json()
       
-      if (reservationsData.error) {
-        throw new Error(reservationsData.error)
+      if (data.error) {
+        throw new Error(data.error)
       }
 
-      // Asegurar que todas las reservas tengan el campo status
-      const reservationsWithStatus = reservationsData.reservations.map((reservation: any) => ({
-        ...reservation,
-        status: reservation.status || 'confirmed'
-      }))
-      setReservations(reservationsWithStatus)
-      setUsers(reservationsData.users)
-      setTeams(reservationsData.teams)
-
-      // Obtener configuración del sistema
-      if (configResponse.ok) {
-        const configData = await configResponse.json()
-        if (configData.config?.maxSpotsPerDay) {
-          setMaxSpots(configData.config.maxSpotsPerDay)
-        }
+      setReservations(data.reservations)
+      setUsers(data.users)
+      setTeams(data.teams)
+      
+      // Actualizar maxSpots con la configuración
+      if (data.config?.maxSpotsPerDay) {
+        console.log('🔧 Reservations - Setting maxSpots to:', data.config.maxSpotsPerDay)
+        setMaxSpots(data.config.maxSpotsPerDay)
+      } else {
+        console.log('🔧 Reservations - No maxSpotsPerDay found in config')
       }
     } catch (error) {
       console.error('Error fetching data:', error)
