@@ -18,9 +18,9 @@ import {
   Card,
   CardContent,
 } from '@mui/material'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import {
-  West as ChevronLeftIcon,
-  East as ChevronRightIcon,
   LocationOn,
   Close as CancelIcon,
 } from '@mui/icons-material'
@@ -174,7 +174,7 @@ export default function CalendarView({
               {monthYear}
             </Typography>
             <IconButton onClick={() => navigateMonth('next')}>
-              <ChevronRightIcon />
+                <ChevronRightIcon />
             </IconButton>
           </Box>
       </Box>
