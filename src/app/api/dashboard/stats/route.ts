@@ -4,6 +4,11 @@ import { UserService } from '@/lib/services/userService'
 import { TeamService } from '@/lib/services/teamService'
 import { ConfigService } from '@/lib/services/configService'
 import dayjs from 'dayjs'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+
+dayjs.extend(isSameOrAfter)
+dayjs.extend(isSameOrBefore)
 
 export async function GET() {
   try {
@@ -25,6 +30,26 @@ export async function GET() {
     const reservedSpots = todayReservations.length
     const availableSpots = maxSpots - reservedSpots
 
+    // Calcular promedio semanal de ocupación
+    const weekStart = dayjs().startOf('week')
+    const weekEnd = dayjs().endOf('week')
+    
+    const weeklyReservations = (reservations as any[]).filter(r => {
+      const reservationDate = dayjs(r.date)
+      return reservationDate.isSameOrAfter(weekStart, 'day') && reservationDate.isSameOrBefore(weekEnd, 'day')
+    })
+
+    const totalWeeklySpots = maxSpots * 7 // 7 días de la semana
+    const totalWeeklyReservations = weeklyReservations.length
+    const weeklyAverage = totalWeeklySpots > 0 ? Math.round((totalWeeklyReservations / totalWeeklySpots) * 100) : 0
+
+    console.log('📊 Dashboard Stats Debug:')
+    console.log('Total reservations:', reservations.length)
+    console.log('Today reservations:', todayReservations.length)
+    console.log('Weekly reservations:', weeklyReservations.length)
+    console.log('Max spots per day:', maxSpots)
+    console.log('Weekly average:', weeklyAverage)
+
     const stats = {
       totalUsers: userStats.totalUsers,
       totalTeams: teams.length,
@@ -32,6 +57,7 @@ export async function GET() {
       availableSpots,
       reservedSpots,
       maxSpots,
+      weeklyAverage,
     }
 
     return NextResponse.json({ stats, reservations, teams })

@@ -31,6 +31,7 @@ interface DashboardStats {
   availableSpots: number
   reservedSpots: number
   maxSpots: number
+  weeklyAverage: number
 }
 
 interface Reservation {
@@ -66,6 +67,7 @@ export default function Dashboard() {
     availableSpots: 0,
     reservedSpots: 0,
     maxSpots: 12,
+    weeklyAverage: 0,
   })
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [teams, setTeams] = useState<Team[]>([])
@@ -163,7 +165,7 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Promedio Semanal"
-            value={`${Math.round((stats.reservedSpots / stats.maxSpots) * 100)}%`}
+            value={`${stats.weeklyAverage}%`}
             subtitle="de ocupación"
             icon={<Business />}
             color="secondary"
@@ -181,7 +183,11 @@ export default function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <MetricCard
             title="Mis Reservas"
-            value={reservations.filter(r => r.userId === session.user?.id).length}
+            value={reservations.filter(r => {
+              const isMyReservation = r.userId === session.user?.id
+              const isFuture = new Date(r.date) > new Date()
+              return isMyReservation && isFuture
+            }).length}
             subtitle="próximas reservas"
             icon={<CalendarToday />}
             color="warning"
