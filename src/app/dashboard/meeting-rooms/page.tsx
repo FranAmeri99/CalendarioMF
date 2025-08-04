@@ -123,6 +123,27 @@ export default function MeetingRoomsPage() {
     }
   }
 
+  const handleDeleteMeetingRoom = async (roomId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta sala? Esta acción no se puede deshacer.')) return
+
+    try {
+      const response = await fetch(`/api/meeting-rooms?id=${roomId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        toast.success('Sala eliminada exitosamente')
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Error al eliminar la sala')
+      }
+    } catch (error) {
+      console.error('Error deleting meeting room:', error)
+      toast.error('Error al eliminar la sala')
+    }
+  }
+
   const formatDateTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleString('es-ES', {
       year: 'numeric',
@@ -189,9 +210,20 @@ export default function MeetingRoomsPage() {
                     {room.description}
                   </p>
                 </div>
-                <Badge variant={room.isActive ? "default" : "secondary"}>
-                  {room.isActive ? "Activa" : "Inactiva"}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={room.isActive ? "default" : "secondary"}>
+                    {room.isActive ? "Activa" : "Inactiva"}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteMeetingRoom(room.id)}
+                    className="text-destructive hover:text-destructive"
+                    title="Eliminar sala"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
