@@ -51,7 +51,7 @@ interface Reservation {
   date: string
   userId: string
   teamId?: string
-  status?: 'confirmed' | 'pending' | 'cancelled'
+  status: 'confirmed' | 'pending' | 'cancelled'
   user: {
     id: string
     name: string
