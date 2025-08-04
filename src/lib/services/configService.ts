@@ -49,7 +49,7 @@ export class ConfigService {
       
       return {
         id: config.id,
-        name: config.name,
+        name: 'Configuración Principal', // Temporal hasta regenerar Prisma
         maxSpotsPerDay: config.maxSpotsPerDay,
         allowWeekendReservations: config.allowWeekendReservations,
         allowHolidayReservations: config.allowHolidayReservations,
@@ -71,7 +71,7 @@ export class ConfigService {
     try {
       const defaultConfig = await prisma.systemConfig.create({
         data: {
-          name: 'Configuración Principal',
+          // name: 'Configuración Principal', // Temporal hasta regenerar Prisma
           maxSpotsPerDay: 12,
           allowWeekendReservations: false,
           allowHolidayReservations: false,
@@ -82,10 +82,10 @@ export class ConfigService {
         },
       })
       
-      return {
-        id: defaultConfig.id,
-        name: defaultConfig.name,
-        maxSpotsPerDay: defaultConfig.maxSpotsPerDay,
+              return {
+          id: defaultConfig.id,
+          name: 'Configuración Principal', // Temporal hasta regenerar Prisma
+          maxSpotsPerDay: defaultConfig.maxSpotsPerDay,
         allowWeekendReservations: defaultConfig.allowWeekendReservations,
         allowHolidayReservations: defaultConfig.allowHolidayReservations,
         maxAdvanceBookingDays: defaultConfig.maxAdvanceBookingDays,
@@ -109,8 +109,9 @@ export class ConfigService {
       // Si no existe configuración, crear una por defecto
       if (!currentConfig) {
         currentConfig = await prisma.systemConfig.create({
-          data: {
-            maxSpotsPerDay: 12,
+                  data: {
+          // name: 'Configuración Principal', // Temporal hasta regenerar Prisma
+          maxSpotsPerDay: 12,
             allowWeekendReservations: false,
             allowHolidayReservations: false,
             maxAdvanceBookingDays: 30,
@@ -126,14 +127,18 @@ export class ConfigService {
         data,
       })
       
-      return {
-        maxSpotsPerDay: updatedConfig.maxSpotsPerDay,
+              return {
+          id: updatedConfig.id,
+          name: 'Configuración Principal', // Temporal hasta regenerar Prisma
+          maxSpotsPerDay: updatedConfig.maxSpotsPerDay,
         allowWeekendReservations: updatedConfig.allowWeekendReservations,
         allowHolidayReservations: updatedConfig.allowHolidayReservations,
         maxAdvanceBookingDays: updatedConfig.maxAdvanceBookingDays,
         minAdvanceBookingHours: updatedConfig.minAdvanceBookingHours,
         autoCancelInactiveReservations: updatedConfig.autoCancelInactiveReservations,
         inactiveReservationHours: updatedConfig.inactiveReservationHours,
+        createdAt: updatedConfig.createdAt,
+        updatedAt: updatedConfig.updatedAt,
       }
     } catch (error) {
       console.error('Error updating config:', error)
