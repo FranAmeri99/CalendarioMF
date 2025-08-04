@@ -2,8 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import { UserService } from '@/lib/services/userService'
 import { TeamService } from '@/lib/services/teamService'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const email = searchParams.get('email')
+    const id = searchParams.get('id')
+
+    // Si se proporciona email, buscar usuario por email
+    if (email) {
+      const user = await UserService.getUserByEmail(email)
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Usuario no encontrado' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(user)
+    }
+
+    // Si se proporciona ID, buscar usuario por ID
+    if (id) {
+      const user = await UserService.getUserById(id)
+      if (!user) {
+        return NextResponse.json(
+          { error: 'Usuario no encontrado' },
+          { status: 404 }
+        )
+      }
+      return NextResponse.json(user)
+    }
+
+    // Si no se proporciona email ni ID, obtener todos los usuarios
     const [users, teams] = await Promise.all([
       UserService.getAllUsers(),
       TeamService.getSimpleTeams(),

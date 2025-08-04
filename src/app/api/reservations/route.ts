@@ -3,8 +3,18 @@ import { ReservationService } from '@/lib/services/reservationService'
 import { UserService } from '@/lib/services/userService'
 import { TeamService } from '@/lib/services/teamService'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId')
+
+    // Si se proporciona userId, obtener reservas del usuario
+    if (userId) {
+      const reservations = await ReservationService.getReservationsByUser(userId)
+      return NextResponse.json(reservations)
+    }
+
+    // Si no se proporciona userId, obtener todas las reservas
     const [reservations, users, teams] = await Promise.all([
       ReservationService.getAllReservations(),
       UserService.getAllUsers(),

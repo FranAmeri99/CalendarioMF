@@ -2,8 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TeamService } from '@/lib/services/teamService'
 import { UserService } from '@/lib/services/userService'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const simple = searchParams.get('simple')
+
+    // Si se solicita simple, devolver solo equipos básicos
+    if (simple === 'true') {
+      const teams = await TeamService.getSimpleTeams()
+      return NextResponse.json(teams)
+    }
+
+    // Si no se solicita simple, devolver equipos con usuarios
     const [teams, users] = await Promise.all([
       TeamService.getAllTeams(),
       UserService.getAllUsers(),

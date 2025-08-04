@@ -16,10 +16,6 @@ import {
   ListItemIcon,
   Chip,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   FormControl,
   InputLabel,
@@ -41,21 +37,38 @@ import {
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { UserService } from '@/lib/services/userService'
-import { TeamService } from '@/lib/services/teamService'
-import { ReservationService } from '@/lib/services/reservationService'
-import type { UserWithTeam } from '@/lib/services/userService'
-import type { Team } from '@prisma/client'
-import type { ReservationWithUser } from '@/lib/services/reservationService'
 
-interface UserProfile extends UserWithTeam {
-  // Extendemos la interfaz si es necesario
+// Tipos locales
+interface UserProfile {
+  id: string
+  name: string
+  email: string
+  role: string
+  teamId?: string
+  team?: {
+    id: string
+    name: string
+  }
+  createdAt: string
+}
+
+interface Reservation {
+  id: string
+  date: string
+  team?: {
+    name: string
+  }
+}
+
+interface Team {
+  id: string
+  name: string
 }
 
 export default function ProfilePage() {
   const { data: session } = useSession()
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [reservations, setReservations] = useState<ReservationWithUser[]>([])
+  const [reservations, setReservations] = useState<Reservation[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
@@ -81,21 +94,26 @@ export default function ProfilePage() {
     try {
       setLoading(true)
       
-      // Obtener datos del usuario actual
       const userEmail = session?.user?.email
       if (!userEmail) {
         throw new Error('No se encontró el email del usuario')
       }
 
-      const userData = await UserService.getUserByEmail(userEmail)
-      if (!userData) {
+      // Obtener datos del usuario
+      const userResponse = await fetch(`/api/users?email=${userEmail}`)
+      if (!userResponse.ok) {
         throw new Error('Usuario no encontrado')
       }
+      const userData = await userResponse.json()
 
-      const [teamsData, reservationsData] = await Promise.all([
-        TeamService.getSimpleTeams(),
-        ReservationService.getReservationsByUser(userData.id),
+      // Obtener equipos y reservas en paralelo
+      const [teamsResponse, reservationsResponse] = await Promise.all([
+        fetch('/api/teams?simple=true'),
+        fetch(`/api/reservations?userId=${userData.id}`)
       ])
+
+      const teamsData = teamsResponse.ok ? await teamsResponse.json() : []
+      const reservationsData = reservationsResponse.ok ? await reservationsResponse.json() : []
 
       setProfile(userData)
       setTeams(teamsData)
@@ -132,7 +150,6 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setEditMode(false)
-    // Restaurar datos originales
     if (profile) {
       setFormData({
         name: profile.name,
@@ -165,20 +182,31 @@ export default function ProfilePage() {
       setSaving(true)
 
       // Actualizar usuario
-      const updatedUser = await UserService.updateUser(profile.id, {
-        name: formData.name,
-        email: formData.email,
-        teamId: formData.teamId || undefined,
+      const response = await fetch(`/api/users/${profile.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          teamId: formData.teamId || undefined,
+        }),
       })
 
-      setProfile(updatedUser)
-      setEditMode(false)
-      
-      setSnackbar({
-        open: true,
-        message: 'Perfil actualizado exitosamente',
-        severity: 'success'
-      })
+      if (response.ok) {
+        const updatedUser = await response.json()
+        setProfile(updatedUser)
+        setEditMode(false)
+        
+        setSnackbar({
+          open: true,
+          message: 'Perfil actualizado exitosamente',
+          severity: 'success'
+        })
+      } else {
+        throw new Error('Error al actualizar')
+      }
     } catch (error) {
       console.error('Error updating profile:', error)
       setSnackbar({

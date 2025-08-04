@@ -26,8 +26,17 @@ import {
   CalendarToday,
   Warning,
 } from '@mui/icons-material'
-import { ConfigService } from '@/lib/services/configService'
-import type { SystemConfig } from '@/lib/services/configService'
+
+// Tipos locales para evitar problemas de importación
+interface SystemConfig {
+  maxSpotsPerDay: number
+  allowWeekendReservations: boolean
+  allowHolidayReservations: boolean
+  maxAdvanceBookingDays: number
+  minAdvanceBookingHours: number
+  autoCancelInactiveReservations: boolean
+  inactiveReservationHours: number
+}
 
 export default function AdminConfigPage() {
   const [config, setConfig] = useState<SystemConfig>({
@@ -55,8 +64,16 @@ export default function AdminConfigPage() {
   const loadConfig = async () => {
     try {
       setLoading(true)
-      const configData = await ConfigService.getConfig()
-      setConfig(configData)
+      
+      // Intentar cargar desde la API
+      const response = await fetch('/api/config')
+      if (response.ok) {
+        const configData = await response.json()
+        setConfig(configData)
+      } else {
+        // Si no hay API, usar configuración por defecto
+        console.log('Usando configuración por defecto')
+      }
     } catch (error) {
       console.error('Error loading config:', error)
       setSnackbar({
@@ -72,12 +89,25 @@ export default function AdminConfigPage() {
   const handleSave = async () => {
     try {
       setSaving(true)
-      await ConfigService.updateConfig(config)
-      setSnackbar({
-        open: true,
-        message: 'Configuración guardada correctamente',
-        severity: 'success'
+      
+      // Intentar guardar en la API
+      const response = await fetch('/api/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
       })
+      
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: 'Configuración guardada correctamente',
+          severity: 'success'
+        })
+      } else {
+        throw new Error('Error al guardar')
+      }
     } catch (error) {
       console.error('Error saving config:', error)
       setSnackbar({
@@ -94,13 +124,37 @@ export default function AdminConfigPage() {
     if (window.confirm('¿Estás seguro de que quieres restaurar la configuración por defecto?')) {
       try {
         setSaving(true)
-        const defaultConfig = await ConfigService.createDefaultConfig()
+        
+        const defaultConfig: SystemConfig = {
+          maxSpotsPerDay: 12,
+          allowWeekendReservations: false,
+          allowHolidayReservations: false,
+          maxAdvanceBookingDays: 30,
+          minAdvanceBookingHours: 2,
+          autoCancelInactiveReservations: true,
+          inactiveReservationHours: 24,
+        }
+        
         setConfig(defaultConfig)
-        setSnackbar({
-          open: true,
-          message: 'Configuración restaurada a valores por defecto',
-          severity: 'info'
+        
+        // Intentar guardar en la API
+        const response = await fetch('/api/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(defaultConfig),
         })
+        
+        if (response.ok) {
+          setSnackbar({
+            open: true,
+            message: 'Configuración restaurada a valores por defecto',
+            severity: 'info'
+          })
+        } else {
+          throw new Error('Error al restaurar')
+        }
       } catch (error) {
         console.error('Error resetting config:', error)
         setSnackbar({
