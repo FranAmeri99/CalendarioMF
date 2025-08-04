@@ -369,6 +369,21 @@ export default function InteractiveCalendar({
           <Button onClick={() => setDialogOpen(false)}>
             Cerrar
           </Button>
+          {selectedDate && (() => {
+            const stats = getDayStats(selectedDate)
+            return !stats.isFull ? (
+              <Button 
+                variant="contained" 
+                color="primary"
+                onClick={() => {
+                  setDialogOpen(false)
+                  onDayClick?.(selectedDate)
+                }}
+              >
+                Hacer Reserva
+              </Button>
+            ) : null
+          })()}
         </DialogActions>
       </Dialog>
     </Paper>
