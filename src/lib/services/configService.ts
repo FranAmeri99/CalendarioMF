@@ -1,6 +1,8 @@
 import { prisma } from '../prisma'
 
 export interface SystemConfig {
+  id: string
+  name: string
   maxSpotsPerDay: number
   allowWeekendReservations: boolean
   allowHolidayReservations: boolean
@@ -8,9 +10,12 @@ export interface SystemConfig {
   minAdvanceBookingHours: number
   autoCancelInactiveReservations: boolean
   inactiveReservationHours: number
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface CreateConfigData {
+  name: string
   maxSpotsPerDay: number
   allowWeekendReservations?: boolean
   allowHolidayReservations?: boolean
@@ -21,6 +26,7 @@ export interface CreateConfigData {
 }
 
 export interface UpdateConfigData {
+  name?: string
   maxSpotsPerDay?: number
   allowWeekendReservations?: boolean
   allowHolidayReservations?: boolean
@@ -42,6 +48,8 @@ export class ConfigService {
       }
       
       return {
+        id: config.id,
+        name: config.name,
         maxSpotsPerDay: config.maxSpotsPerDay,
         allowWeekendReservations: config.allowWeekendReservations,
         allowHolidayReservations: config.allowHolidayReservations,
@@ -49,6 +57,8 @@ export class ConfigService {
         minAdvanceBookingHours: config.minAdvanceBookingHours,
         autoCancelInactiveReservations: config.autoCancelInactiveReservations,
         inactiveReservationHours: config.inactiveReservationHours,
+        createdAt: config.createdAt,
+        updatedAt: config.updatedAt,
       }
     } catch (error) {
       console.error('Error fetching config:', error)
@@ -61,6 +71,7 @@ export class ConfigService {
     try {
       const defaultConfig = await prisma.systemConfig.create({
         data: {
+          name: 'Configuración Principal',
           maxSpotsPerDay: 12,
           allowWeekendReservations: false,
           allowHolidayReservations: false,
@@ -72,6 +83,8 @@ export class ConfigService {
       })
       
       return {
+        id: defaultConfig.id,
+        name: defaultConfig.name,
         maxSpotsPerDay: defaultConfig.maxSpotsPerDay,
         allowWeekendReservations: defaultConfig.allowWeekendReservations,
         allowHolidayReservations: defaultConfig.allowHolidayReservations,
@@ -79,6 +92,8 @@ export class ConfigService {
         minAdvanceBookingHours: defaultConfig.minAdvanceBookingHours,
         autoCancelInactiveReservations: defaultConfig.autoCancelInactiveReservations,
         inactiveReservationHours: defaultConfig.inactiveReservationHours,
+        createdAt: defaultConfig.createdAt,
+        updatedAt: defaultConfig.updatedAt,
       }
     } catch (error) {
       console.error('Error creating default config:', error)
