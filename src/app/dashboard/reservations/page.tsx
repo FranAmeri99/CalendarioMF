@@ -29,7 +29,7 @@ import {
   Add,
   Edit,
   Delete,
-  Event,
+  CalendarToday,
 } from '@mui/icons-material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -267,7 +267,11 @@ export default function ReservationsPage() {
                 label="Fecha"
                 value={formData.date}
                 onChange={(newValue) => setFormData({ ...formData, date: newValue || new Date() })}
-                renderInput={(params) => <TextField {...params} fullWidth />}
+                slotProps={{
+                  textField: {
+                    fullWidth: true
+                  }
+                }}
               />
 
               <FormControl fullWidth>

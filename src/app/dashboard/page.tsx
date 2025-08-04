@@ -19,9 +19,9 @@ import {
 } from '@mui/material'
 import {
   People,
-  Group,
-  Event,
-  CheckCircle,
+  Business,
+  CalendarToday,
+  Check,
   Warning,
 } from '@mui/icons-material'
 import { format, startOfWeek, addDays } from 'date-fns'
@@ -150,7 +150,7 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <Group color="primary" />
+                <Business color="primary" />
                 <Box>
                   <Typography variant="h4">{stats.totalTeams}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -166,7 +166,7 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <Event color="primary" />
+                <CalendarToday color="primary" />
                 <Box>
                   <Typography variant="h4">{stats.totalReservations}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -182,7 +182,7 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>
-                <CheckCircle color="primary" />
+                <Check color="primary" />
                 <Box>
                   <Typography variant="h4">{stats.availableSpots}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                             />
                           ) : (
                             <Chip
-                              icon={<CheckCircle />}
+                              icon={<Check />}
                               label="Disponible"
                               color="success"
                               size="small"

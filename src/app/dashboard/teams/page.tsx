@@ -30,7 +30,7 @@ import {
   Add,
   Edit,
   Delete,
-  Group,
+  Business,
   Person,
 } from '@mui/icons-material'
 import toast from 'react-hot-toast'
@@ -237,7 +237,7 @@ export default function TeamsPage() {
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={2}>
                       <Avatar>
-                        <Group />
+                        <Business />
                       </Avatar>
                       <Typography variant="body2">{team.name}</Typography>
                     </Box>

@@ -3,6 +3,37 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 
+// Extender los tipos de NextAuth
+declare module 'next-auth' {
+  interface User {
+    id: string
+    email: string
+    name: string
+    role: string
+    teamId?: string
+    team?: any
+  }
+  
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name: string
+      role: string
+      teamId?: string
+      team?: any
+    }
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role: string
+    teamId?: string
+    team?: any
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -43,7 +74,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          teamId: user.teamId,
+          teamId: user.teamId || undefined,
           team: user.team
         }
       }
@@ -62,7 +93,7 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.sub!
         session.user.role = token.role as string
         session.user.teamId = token.teamId as string

@@ -1,4 +1,33 @@
-import { User, Team, Reservation } from '@prisma/client'
+// Tipos para la aplicación de gestión de asistencia
+
+export interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+  teamId?: string
+  avatar?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Team {
+  id: string
+  name: string
+  description?: string
+  leaderId?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface Reservation {
+  id: string
+  date: Date
+  userId: string
+  teamId?: string
+  createdAt: Date
+  updatedAt: Date
+}
 
 export type UserWithTeam = User & {
   team: Team | null
@@ -6,6 +35,7 @@ export type UserWithTeam = User & {
 
 export type ReservationWithUser = Reservation & {
   user: User
+  team: Team | null
 }
 
 export type ReservationWithUserAndTeam = Reservation & {

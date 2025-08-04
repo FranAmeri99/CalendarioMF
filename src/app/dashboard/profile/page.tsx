@@ -30,11 +30,11 @@ import {
 import {
   Person,
   Email,
-  Group,
-  Event,
+  Business,
+  CalendarToday,
   Edit,
-  Save,
-  Cancel,
+  Check,
+  Close,
 } from '@mui/icons-material'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -214,14 +214,14 @@ export default function ProfilePage() {
           <Box display="flex" gap={1}>
             <Button
               variant="outlined"
-              startIcon={<Cancel />}
+                              startIcon={<Close />}
               onClick={handleCancel}
             >
               Cancelar
             </Button>
             <Button
               variant="contained"
-              startIcon={<Save />}
+                              startIcon={<Check />}
               onClick={handleSave}
             >
               Guardar
@@ -318,7 +318,7 @@ export default function ProfilePage() {
                   <Box key={reservation.id}>
                     <ListItem>
                       <ListItemIcon>
-                        <Event />
+                        <CalendarToday />
                       </ListItemIcon>
                       <ListItemText
                         primary={format(new Date(reservation.date), 'EEEE, dd/MM/yyyy', { locale: es })}

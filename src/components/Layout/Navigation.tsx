@@ -23,18 +23,18 @@ import {
 import {
   Menu as MenuIcon,
   Dashboard,
-  Event,
+  CalendarToday,
   People,
-  Group,
+  Business,
   Person,
-  Logout,
+  ExitToApp,
 } from '@mui/icons-material'
 
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Reservas', icon: <Event />, path: '/reservations' },
+  { text: 'Reservas', icon: <CalendarToday />, path: '/reservations' },
   { text: 'Personas', icon: <People />, path: '/users' },
-  { text: 'Equipos', icon: <Group />, path: '/teams' },
+  { text: 'Equipos', icon: <Business />, path: '/teams' },
   { text: 'Perfil', icon: <Person />, path: '/profile' },
 ]
 
@@ -120,7 +120,7 @@ export default function Navigation() {
               <Divider />
               <MenuItem onClick={handleLogout}>
                 <ListItemIcon>
-                  <Logout fontSize="small" />
+                  <ExitToApp fontSize="small" />
                 </ListItemIcon>
                 Cerrar Sesión
               </MenuItem>
