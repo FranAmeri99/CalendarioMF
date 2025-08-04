@@ -98,7 +98,7 @@ export default function ReservationsPage() {
     teamId: '',
   })
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
-  const [maxSpots, setMaxSpots] = useState(12)
+  const [maxSpots, setMaxSpots] = useState(18) // Valor por defecto que se actualizará con la configuración real
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   useEffect(() => {

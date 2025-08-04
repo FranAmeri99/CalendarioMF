@@ -66,7 +66,7 @@ export default function Dashboard() {
     totalReservations: 0,
     availableSpots: 0,
     reservedSpots: 0,
-    maxSpots: 12,
+    maxSpots: 18, // Valor por defecto que se actualizará con la configuración real
     weeklyAverage: 0,
   })
   const [reservations, setReservations] = useState<Reservation[]>([])
