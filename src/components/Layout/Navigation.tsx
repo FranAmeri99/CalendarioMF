@@ -32,10 +32,10 @@ import {
 
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Reservas', icon: <CalendarToday />, path: '/reservations' },
-  { text: 'Personas', icon: <People />, path: '/users' },
-  { text: 'Equipos', icon: <Business />, path: '/teams' },
-  { text: 'Perfil', icon: <Person />, path: '/profile' },
+  { text: 'Reservas', icon: <CalendarToday />, path: '/dashboard/reservations' },
+  { text: 'Personas', icon: <People />, path: '/dashboard/users' },
+  { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
+  { text: 'Perfil', icon: <Person />, path: '/dashboard/profile' },
 ]
 
 export default function Navigation() {
@@ -111,7 +111,7 @@ export default function Navigation() {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => handleNavigation('/profile')}>
+              <MenuItem onClick={() => handleNavigation('/dashboard/profile')}>
                 <ListItemIcon>
                   <Person fontSize="small" />
                 </ListItemIcon>
