@@ -6,9 +6,13 @@ import { ConfigService } from '@/lib/services/configService'
 import dayjs from 'dayjs'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 
 dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 export async function GET() {
   try {
@@ -19,7 +23,7 @@ export async function GET() {
       ConfigService.getConfig(),
     ])
 
-    const maxSpots = 12 // Forzar a 12 para corregir el problema
+    const maxSpots = config?.maxSpotsPerDay || 12
     const today = dayjs().startOf('day')
     
     console.log('🔍 All reservations count:', reservations.length)
@@ -48,12 +52,15 @@ export async function GET() {
     const weeklyAverage = totalWeeklySpots > 0 ? Math.round((totalWeeklyReservations / totalWeeklySpots) * 100) : 0
 
     console.log('📊 Dashboard Stats Debug:')
+    console.log('Config maxSpotsPerDay:', config?.maxSpotsPerDay)
+    console.log('Using maxSpots:', maxSpots)
     console.log('Total reservations:', reservations.length)
     console.log('Today reservations:', todayReservations.length)
     console.log('Weekly reservations:', weeklyReservations.length)
-    console.log('Max spots per day:', maxSpots)
     console.log('Weekly average:', weeklyAverage)
     console.log('Today date:', today.format('YYYY-MM-DD'))
+    console.log('Week start:', weekStart.format('YYYY-MM-DD'))
+    console.log('Week end:', weekEnd.format('YYYY-MM-DD'))
     
     // Verificar si hay reservas duplicadas
     const todayReservationIds = todayReservations.map(r => r.id)
