@@ -50,7 +50,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
   // Debug: mostrar todas las reservas
   console.log('🔍 WeeklyOccupation - Todas las reservas:')
   reservations.forEach((reservation, index) => {
-    const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires')
+    const reservationDate = dayjs.utc(reservation.date).tz('America/Argentina/Buenos_Aires')
     console.log(`  ${index + 1}. ${reservation.user.name} - ${reservationDate.format('YYYY-MM-DD HH:mm:ss')} (${reservation.date})`)
   })
 
@@ -62,7 +62,8 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
 
   const getReservationsForDay = (date: dayjs.Dayjs) => {
     const dayReservations = reservations.filter(reservation => {
-      const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires').startOf('day')
+      // Convertir la fecha de la reserva a UTC primero, luego a zona horaria de Argentina
+      const reservationDate = dayjs.utc(reservation.date).tz('America/Argentina/Buenos_Aires').startOf('day')
       const compareDate = date.tz('America/Argentina/Buenos_Aires').startOf('day')
       const isSame = compareDate.isSame(reservationDate, 'day')
       
@@ -72,6 +73,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
         console.log(`  - Compare date: ${compareDate.format('YYYY-MM-DD HH:mm:ss')}`)
         console.log(`  - Reservation date: ${reservationDate.format('YYYY-MM-DD HH:mm:ss')}`)
         console.log(`  - Reservation original: ${reservation.date}`)
+        console.log(`  - Reservation UTC: ${dayjs.utc(reservation.date).format('YYYY-MM-DD HH:mm:ss')}`)
       }
       
       return isSame
