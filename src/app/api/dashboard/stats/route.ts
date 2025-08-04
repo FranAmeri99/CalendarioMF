@@ -19,12 +19,16 @@ export async function GET() {
       ConfigService.getConfig(),
     ])
 
-    const maxSpots = config?.maxSpotsPerDay || 12
+    const maxSpots = 12 // Forzar a 12 para corregir el problema
     const today = dayjs().startOf('day')
     
+    console.log('🔍 All reservations count:', reservations.length)
+
     const todayReservations = (reservations as any[]).filter(r => {
       const reservationDate = dayjs(r.date).startOf('day')
-      return reservationDate.isSame(today, 'day')
+      const isToday = reservationDate.isSame(today, 'day')
+      console.log(`Reservation ${r.id}: ${r.date} -> ${reservationDate.format('YYYY-MM-DD')} isToday: ${isToday}`)
+      return isToday
     })
 
     const reservedSpots = todayReservations.length
@@ -49,6 +53,14 @@ export async function GET() {
     console.log('Weekly reservations:', weeklyReservations.length)
     console.log('Max spots per day:', maxSpots)
     console.log('Weekly average:', weeklyAverage)
+    console.log('Today date:', today.format('YYYY-MM-DD'))
+    
+    // Verificar si hay reservas duplicadas
+    const todayReservationIds = todayReservations.map(r => r.id)
+    const uniqueIds = new Set(todayReservationIds)
+    console.log('Today reservation IDs:', todayReservationIds)
+    console.log('Unique IDs count:', uniqueIds.size)
+    console.log('Has duplicates:', todayReservationIds.length !== uniqueIds.size)
 
     const stats = {
       totalUsers: userStats.totalUsers,
