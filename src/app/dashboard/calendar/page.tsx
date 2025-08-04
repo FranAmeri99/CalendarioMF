@@ -43,7 +43,7 @@ export default function CalendarPage() {
   const [users, setUsers] = useState<User[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
-  const [maxSpots, setMaxSpots] = useState(19) // Valor por defecto que se actualizará con la configuración real
+  const [maxSpots, setMaxSpots] = useState(20) // Valor por defecto que se actualizará con la configuración real
 
   useEffect(() => {
     if (status === 'unauthenticated') {
