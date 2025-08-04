@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  teamId    String?
+  team      Team?    @relation(fields: [teamId], references: [id])
+  reservations Reservation[]
+  teamMembers Team[] @relation("TeamMembers")
+
+  @@map("users")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  members     User[]
+  leader      User?    @relation("TeamMembers", fields: [leaderId], references: [id])
+  leaderId    String?
+  reservations Reservation[]
+
+  @@map("teams")
+}
+
+model Reservation {
+  id        String   @id @default(cuid())
+  date      DateTime
+  userId    String
+  teamId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team?    @relation(fields: [teamId], references: [id])
+
+  @@unique([date, userId])
+  @@map("reservations")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+} 
