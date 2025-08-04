@@ -47,15 +47,25 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
 
   const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).add(i, 'day'))
 
+  // Debug: mostrar todas las reservas
+  console.log('🔍 WeeklyOccupation - Todas las reservas:')
+  reservations.forEach((reservation, index) => {
+    const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires')
+    console.log(`  ${index + 1}. ${reservation.user.name} - ${reservationDate.format('YYYY-MM-DD HH:mm:ss')} (${reservation.date})`)
+  })
+
   const getReservationsForDay = (date: dayjs.Dayjs) => {
     const dayReservations = reservations.filter(reservation => {
       const reservationDate = dayjs(reservation.date).tz('America/Argentina/Buenos_Aires').startOf('day')
-      const compareDate = date.startOf('day')
+      const compareDate = date.tz('America/Argentina/Buenos_Aires').startOf('day')
       const isSame = compareDate.isSame(reservationDate, 'day')
       
       // Debug log para el miércoles
       if (date.format('dddd') === 'miércoles') {
         console.log(`🔍 Miércoles debug: ${date.format('YYYY-MM-DD')} vs ${reservationDate.format('YYYY-MM-DD')} = ${isSame}`)
+        console.log(`  - Compare date: ${compareDate.format('YYYY-MM-DD HH:mm:ss')}`)
+        console.log(`  - Reservation date: ${reservationDate.format('YYYY-MM-DD HH:mm:ss')}`)
+        console.log(`  - Reservation original: ${reservation.date}`)
       }
       
       return isSame
