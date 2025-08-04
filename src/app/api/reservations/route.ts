@@ -43,8 +43,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Convertir la fecha a formato completo con hora 12:00:00 UTC
+    let reservationDate: Date
+    if (typeof date === 'string' && date.includes('T')) {
+      // Si ya es una fecha completa, usarla tal como está
+      reservationDate = new Date(date)
+    } else {
+      // Si es solo una fecha (YYYY-MM-DD), agregar hora 12:00:00 UTC
+      const [year, month, day] = date.split('-').map(Number)
+      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+    }
+
+    console.log('🔍 Creando reserva:')
+    console.log(`  - Fecha recibida: ${date}`)
+    console.log(`  - Fecha procesada: ${reservationDate.toISOString()}`)
+
     const reservation = await ReservationService.createReservation({
-      date: new Date(date),
+      date: reservationDate,
       userId,
       teamId: teamId || undefined,
     })
@@ -71,8 +86,23 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Convertir la fecha a formato completo con hora 12:00:00 UTC
+    let reservationDate: Date
+    if (typeof date === 'string' && date.includes('T')) {
+      // Si ya es una fecha completa, usarla tal como está
+      reservationDate = new Date(date)
+    } else {
+      // Si es solo una fecha (YYYY-MM-DD), agregar hora 12:00:00 UTC
+      const [year, month, day] = date.split('-').map(Number)
+      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+    }
+
+    console.log('🔍 Actualizando reserva:')
+    console.log(`  - Fecha recibida: ${date}`)
+    console.log(`  - Fecha procesada: ${reservationDate.toISOString()}`)
+
     const reservation = await ReservationService.updateReservation(id, {
-      date: new Date(date),
+      date: reservationDate,
       userId,
       teamId: teamId || undefined,
     })
