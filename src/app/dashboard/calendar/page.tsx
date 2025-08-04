@@ -89,9 +89,15 @@ export default function CalendarPage() {
       // Obtener configuración del sistema
       if (configResponse.ok) {
         const configData = await configResponse.json()
+        console.log('🔧 Calendar - Config data:', configData)
         if (configData.config?.maxSpotsPerDay) {
+          console.log('🔧 Calendar - Setting maxSpots to:', configData.config.maxSpotsPerDay)
           setMaxSpots(configData.config.maxSpotsPerDay)
+        } else {
+          console.log('🔧 Calendar - No maxSpotsPerDay found in config')
         }
+      } else {
+        console.log('🔧 Calendar - Config response not ok:', configResponse.status)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -181,6 +187,8 @@ export default function CalendarPage() {
     return null
   }
 
+  console.log('🔧 Calendar - Current maxSpots value:', maxSpots)
+  
   return (
     <div className="container mx-auto p-6">
       <ModernCalendarView
