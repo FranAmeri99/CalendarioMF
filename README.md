@@ -32,6 +32,8 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 
 ## 🛠️ Instalación
 
+### Opción 1: Con Supabase (Recomendado)
+
 1. **Clonar el repositorio**
    ```bash
    git clone <url-del-repositorio>
@@ -43,31 +45,63 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
    npm install
    ```
 
-3. **Configurar variables de entorno**
+3. **Configurar Supabase**
+   - Sigue la guía completa en `SUPABASE_SETUP.md`
+   - Crea un proyecto en [supabase.com](https://supabase.com)
+   - Obtén la URL de conexión
+
+4. **Configurar variables de entorno**
    ```bash
-   # Crear archivo .env.local
-   DATABASE_URL="file:./dev.db"
+   # Actualizar .env con tu URL de Supabase
+   DATABASE_URL="postgresql://postgres:tu-password@db.tu-project.supabase.co:5432/postgres"
    NEXTAUTH_SECRET="tu-secreto-super-seguro-aqui"
    NEXTAUTH_URL="http://localhost:3000"
    ```
 
-4. **Configurar la base de datos**
+5. **Configurar la base de datos**
    ```bash
    # Generar el cliente de Prisma
    npm run db:generate
    
-   # Crear las tablas en la base de datos
+   # Crear las tablas en Supabase
    npm run db:push
+   
+   # Insertar datos de prueba
+   npm run db:seed
+   ```
+
+6. **Ejecutar la aplicación**
+   ```bash
+   npm run dev
+   ```
+
+### Opción 2: Con SQLite (Desarrollo local)
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <url-del-repositorio>
+   cd asistencia-app
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar SQLite**
+   - Cambia el proveedor en `prisma/schema.prisma` a `sqlite`
+   - Actualiza `DATABASE_URL` en `.env` a `file:./dev.db`
+
+4. **Configurar la base de datos**
+   ```bash
+   npm run db:generate
+   npm run db:push
+   npm run db:seed
    ```
 
 5. **Ejecutar la aplicación**
    ```bash
    npm run dev
-   ```
-
-6. **Abrir en el navegador**
-   ```
-   http://localhost:3000
    ```
 
 ## 🗄️ Estructura de la Base de Datos
@@ -84,6 +118,24 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 - Un equipo puede tener múltiples miembros
 - Un equipo puede tener un líder
 - Las reservas están asociadas a usuarios y equipos
+
+## 🔧 Scripts Disponibles
+
+```bash
+# Desarrollo
+npm run dev          # Iniciar servidor de desarrollo
+npm run build        # Construir para producción
+npm run start        # Iniciar servidor de producción
+npm run lint         # Ejecutar linter
+
+# Base de datos
+npm run db:generate  # Generar cliente de Prisma
+npm run db:push      # Sincronizar esquema con la base de datos
+npm run db:migrate   # Ejecutar migraciones
+npm run db:studio    # Abrir Prisma Studio
+npm run db:seed      # Insertar datos de prueba
+npm run test:supabase # Probar conexión a Supabase
+```
 
 ## 📱 Funcionalidades por Sección
 
