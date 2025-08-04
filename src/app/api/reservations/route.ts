@@ -53,6 +53,12 @@ export async function POST(request: NextRequest) {
       const [year, month, day] = date.split('-').map(Number)
       // Crear fecha en zona horaria local (no UTC)
       reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
+      
+      console.log('🔍 API - Procesando fecha:')
+      console.log(`  - Fecha recibida: ${date}`)
+      console.log(`  - Año: ${year}, Mes: ${month}, Día: ${day}`)
+      console.log(`  - Fecha creada: ${reservationDate.toISOString()}`)
+      console.log(`  - Fecha local: ${reservationDate.toString()}`)
     }
 
     console.log('🔍 Creando reserva:')

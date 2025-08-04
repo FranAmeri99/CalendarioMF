@@ -108,6 +108,10 @@ export function ModernCalendarView({
   const handleReservation = async (date: string) => {
     if (!currentUser || !onCreateReservation) return;
     
+    console.log('🔍 Calendario - Creando reserva:')
+    console.log(`  - Fecha seleccionada: ${date}`)
+    console.log(`  - Usuario: ${currentUser.id}`)
+    
     try {
       await onCreateReservation(date);
       toast.success('Reserva creada exitosamente');
