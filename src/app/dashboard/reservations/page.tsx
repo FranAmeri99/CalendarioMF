@@ -362,6 +362,11 @@ export default function ReservationsPage() {
             const currentUserId = session?.user?.id
             const currentUser = users.find(u => u.id === currentUserId)
             
+            console.log('🔍 Creando reserva desde calendario:')
+            console.log(`  - Fecha recibida del calendario: ${date}`)
+            console.log(`  - Usuario: ${currentUserId}`)
+            console.log(`  - Equipo: ${currentUser?.teamId}`)
+            
             try {
               const response = await fetch('/api/reservations', {
                 method: 'POST',
