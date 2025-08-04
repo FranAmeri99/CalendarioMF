@@ -31,8 +31,8 @@ export async function GET() {
     console.log('🔍 Current date (Argentina):', today.format('YYYY-MM-DD'))
 
     const todayReservations = (reservations as any[]).filter(r => {
-      // Convertir la fecha de la reserva a zona horaria de Argentina
-      const reservationDate = dayjs(r.date).tz('America/Argentina/Buenos_Aires').startOf('day')
+      // Convertir la fecha de la reserva a UTC primero, luego a zona horaria de Argentina
+      const reservationDate = dayjs.utc(r.date).tz('America/Argentina/Buenos_Aires').startOf('day')
       const isToday = reservationDate.isSame(today, 'day')
       
       console.log(`Reservation ${r.id}: ${r.date} -> ${reservationDate.format('YYYY-MM-DD')} isToday: ${isToday}`)
@@ -42,7 +42,7 @@ export async function GET() {
       console.log(`  - Is same day: ${isToday}`)
       
       // También verificar con formato simple para debug
-      const simpleDate = dayjs(r.date).format('YYYY-MM-DD')
+      const simpleDate = dayjs.utc(r.date).format('YYYY-MM-DD')
       const todaySimple = today.format('YYYY-MM-DD')
       const isTodaySimple = simpleDate === todaySimple
       console.log(`  - Simple comparison: ${simpleDate} === ${todaySimple} = ${isTodaySimple}`)
@@ -58,7 +58,7 @@ export async function GET() {
     const weekEnd = dayjs().tz('America/Argentina/Buenos_Aires').endOf('week')
     
     const weeklyReservations = (reservations as any[]).filter(r => {
-      const reservationDate = dayjs(r.date).tz('America/Argentina/Buenos_Aires')
+      const reservationDate = dayjs.utc(r.date).tz('America/Argentina/Buenos_Aires')
       return reservationDate.isSameOrAfter(weekStart, 'day') && reservationDate.isSameOrBefore(weekEnd, 'day')
     })
 
