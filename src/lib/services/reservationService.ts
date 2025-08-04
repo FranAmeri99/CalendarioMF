@@ -166,9 +166,13 @@ export class ReservationService {
   // Eliminar reserva
   static async deleteReservation(id: string): Promise<void> {
     try {
+      console.log(`🔄 Eliminando reserva con ID: ${id}`)
+      
       await prisma.reservation.delete({
         where: { id },
       })
+      
+      console.log(`✅ Reserva eliminada exitosamente: ${id}`)
     } catch (error) {
       console.error('Error deleting reservation:', error)
       throw new Error('Error al eliminar reserva')

@@ -130,6 +130,9 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
+    console.log('🔍 Eliminando reserva:')
+    console.log(`  - ID de reserva: ${id}`)
+
     if (!id) {
       return NextResponse.json(
         { error: 'ID de reserva es requerido' },
@@ -138,6 +141,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await ReservationService.deleteReservation(id)
+    console.log(`✅ Reserva eliminada exitosamente: ${id}`)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting reservation:', error)
