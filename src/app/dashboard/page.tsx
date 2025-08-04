@@ -25,240 +25,69 @@ import {
 import Navigation from '@/components/Layout/Navigation'
 import InteractiveCalendar from '@/components/Calendar/InteractiveCalendar'
 import CalendarStats from '@/components/Calendar/CalendarStats'
-import type { ReservationWithUser, DashboardStats } from '@/types'
+import { ReservationService } from '@/lib/services/reservationService'
+import { UserService } from '@/lib/services/userService'
+import { TeamService } from '@/lib/services/teamService'
+import type { ReservationWithUser } from '@/lib/services/reservationService'
 
-// Datos mock para demostración
-const mockReservations: ReservationWithUser[] = [
-  {
-    id: '1',
-    date: new Date('2024-01-15'),
-    userId: '1',
-    teamId: '1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '1',
-      email: 'juan.perez@empresa.com',
-      name: 'Juan Pérez',
-      role: 'USER',
-      teamId: '1',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '1',
-      name: 'Desarrollo',
-      description: 'Equipo de desarrollo',
-      leaderId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '2',
-    date: new Date('2024-01-15'),
-    userId: '2',
-    teamId: '1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '2',
-      email: 'maria.garcia@empresa.com',
-      name: 'María García',
-      role: 'MANAGER',
-      teamId: '1',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '1',
-      name: 'Desarrollo',
-      description: 'Equipo de desarrollo',
-      leaderId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '3',
-    date: new Date('2024-01-16'),
-    userId: '3',
-    teamId: '2',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '3',
-      email: 'carlos.lopez@empresa.com',
-      name: 'Carlos López',
-      role: 'USER',
-      teamId: '2',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '2',
-      name: 'Diseño',
-      description: 'Equipo de diseño',
-      leaderId: '3',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '4',
-    date: new Date('2024-01-17'),
-    userId: '4',
-    teamId: '2',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '4',
-      email: 'ana.martinez@empresa.com',
-      name: 'Ana Martínez',
-      role: 'USER',
-      teamId: '2',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '2',
-      name: 'Diseño',
-      description: 'Equipo de diseño',
-      leaderId: '3',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '5',
-    date: new Date('2024-01-18'),
-    userId: '5',
-    teamId: '3',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '5',
-      email: 'pedro.rodriguez@empresa.com',
-      name: 'Pedro Rodríguez',
-      role: 'ADMIN',
-      teamId: '3',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '3',
-      name: 'Marketing',
-      description: 'Equipo de marketing',
-      leaderId: '5',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  // Agregar más reservas para mostrar diferentes estados
-  {
-    id: '6',
-    date: new Date('2024-01-19'),
-    userId: '6',
-    teamId: '1',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '6',
-      email: 'lucia.fernandez@empresa.com',
-      name: 'Lucía Fernández',
-      role: 'USER',
-      teamId: '1',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '1',
-      name: 'Desarrollo',
-      description: 'Equipo de desarrollo',
-      leaderId: '1',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '7',
-    date: new Date('2024-01-19'),
-    userId: '7',
-    teamId: '2',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '7',
-      email: 'diego.silva@empresa.com',
-      name: 'Diego Silva',
-      role: 'USER',
-      teamId: '2',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '2',
-      name: 'Diseño',
-      description: 'Equipo de diseño',
-      leaderId: '3',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-  {
-    id: '8',
-    date: new Date('2024-01-19'),
-    userId: '8',
-    teamId: '3',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    user: {
-      id: '8',
-      email: 'sofia.morales@empresa.com',
-      name: 'Sofía Morales',
-      role: 'USER',
-      teamId: '3',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    team: {
-      id: '3',
-      name: 'Marketing',
-      description: 'Equipo de marketing',
-      leaderId: '5',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  },
-]
-
-const mockStats: DashboardStats = {
-  totalUsers: 25,
-  totalTeams: 4,
-  totalReservations: 8,
-  availableSpots: 88,
-  reservedSpots: 8,
+interface DashboardStats {
+  totalUsers: number
+  totalTeams: number
+  totalReservations: number
+  availableSpots: number
+  reservedSpots: number
 }
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [reservations, setReservations] = useState<ReservationWithUser[]>(mockReservations)
-  const [stats, setStats] = useState<DashboardStats>(mockStats)
+  const [reservations, setReservations] = useState<ReservationWithUser[]>([])
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalTeams: 0,
+    totalReservations: 0,
+    availableSpots: 0,
+    reservedSpots: 0,
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/login')
     }
   }, [status, router])
+
+  // Cargar datos reales
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadDashboardData()
+    }
+  }, [status])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      const [reservationsData, userStats, teamStats, reservationStats] = await Promise.all([
+        ReservationService.getAllReservations(),
+        UserService.getUserStats(),
+        TeamService.getSimpleTeams(),
+        ReservationService.getReservationStats(),
+      ])
+
+      setReservations(reservationsData)
+      setStats({
+        totalUsers: userStats.totalUsers,
+        totalTeams: teamStats.length,
+        totalReservations: reservationStats.totalReservations,
+        availableSpots: 12 - reservationStats.todayReservations, // 12 lugares por día
+        reservedSpots: reservationStats.todayReservations,
+      })
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleDayClick = (date: Date) => {
     console.log('Día seleccionado:', date)

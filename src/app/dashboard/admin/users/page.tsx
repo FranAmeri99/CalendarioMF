@@ -28,6 +28,7 @@ import {
   Snackbar,
   Avatar,
   Tooltip,
+  CircularProgress,
 } from '@mui/material'
 import {
   Add,
@@ -36,13 +37,15 @@ import {
   Search,
   Visibility,
   VisibilityOff,
-  AdminPanelSettings,
   Person,
   Business,
 } from '@mui/icons-material'
 import Navigation from '@/components/Layout/Navigation'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
-import type { User, Team } from '@/types'
+import { UserService } from '@/lib/services/userService'
+import { TeamService } from '@/lib/services/teamService'
+import type { UserWithTeam } from '@/lib/services/userService'
+import type { Team } from '@/lib/services/teamService'
 
 interface UserFormData {
   name: string
@@ -50,10 +53,6 @@ interface UserFormData {
   password: string
   role: 'ADMIN' | 'MANAGER' | 'USER'
   teamId?: string
-}
-
-interface UserWithTeam extends User {
-  team?: Team | null
 }
 
 export default function AdminUsersPage() {
@@ -71,111 +70,40 @@ export default function AdminUsersPage() {
     teamId: '',
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info'
   })
 
-  // Datos mock para demostración
-  const mockUsers: UserWithTeam[] = [
-    {
-      id: '1',
-      email: 'admin@empresa.com',
-      name: 'Administrador Principal',
-      role: 'ADMIN',
-      teamId: undefined,
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      email: 'juan.perez@empresa.com',
-      name: 'Juan Pérez',
-      role: 'USER',
-      teamId: '1',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      team: {
-        id: '1',
-        name: 'Desarrollo',
-        description: 'Equipo de desarrollo',
-        leaderId: '2',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-    },
-    {
-      id: '3',
-      email: 'maria.garcia@empresa.com',
-      name: 'María García',
-      role: 'MANAGER',
-      teamId: '1',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      team: {
-        id: '1',
-        name: 'Desarrollo',
-        description: 'Equipo de desarrollo',
-        leaderId: '2',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-    },
-    {
-      id: '4',
-      email: 'carlos.lopez@empresa.com',
-      name: 'Carlos López',
-      role: 'USER',
-      teamId: '2',
-      avatar: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      team: {
-        id: '2',
-        name: 'Diseño',
-        description: 'Equipo de diseño',
-        leaderId: '4',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }
-    },
-  ]
-
-  const mockTeams: Team[] = [
-    {
-      id: '1',
-      name: 'Desarrollo',
-      description: 'Equipo de desarrollo',
-      leaderId: '2',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '2',
-      name: 'Diseño',
-      description: 'Equipo de diseño',
-      leaderId: '4',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-    {
-      id: '3',
-      name: 'Marketing',
-      description: 'Equipo de marketing',
-      leaderId: '5',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    },
-  ]
-
+  // Cargar datos iniciales
   useEffect(() => {
-    setUsers(mockUsers)
-    setTeams(mockTeams)
-  }, [])
+    if (isAdmin) {
+      loadData()
+    }
+  }, [isAdmin])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [usersData, teamsData] = await Promise.all([
+        UserService.getAllUsers(),
+        TeamService.getSimpleTeams(),
+      ])
+      setUsers(usersData)
+      setTeams(teamsData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+      setSnackbar({
+        open: true,
+        message: 'Error al cargar los datos',
+        severity: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -223,20 +151,18 @@ export default function AdminUsersPage() {
     try {
       if (editingUser) {
         // Actualizar usuario existente
-        const updatedUsers = users.map(user =>
-          user.id === editingUser.id
-            ? {
-                ...user,
-                name: formData.name,
-                email: formData.email,
-                role: formData.role,
-                teamId: formData.teamId || undefined,
-                team: teams.find(team => team.id === formData.teamId) || null,
-                updatedAt: new Date(),
-              }
-            : user
-        )
-        setUsers(updatedUsers)
+        const updatedUser = await UserService.updateUser(editingUser.id, {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          teamId: formData.teamId || undefined,
+          ...(formData.password && { password: formData.password }),
+        })
+        
+        setUsers(users.map(user => 
+          user.id === editingUser.id ? updatedUser : user
+        ))
+        
         setSnackbar({
           open: true,
           message: 'Usuario actualizado correctamente',
@@ -244,19 +170,15 @@ export default function AdminUsersPage() {
         })
       } else {
         // Crear nuevo usuario
-        const newUser: UserWithTeam = {
-          id: Date.now().toString(),
+        const newUser = await UserService.createUser({
           name: formData.name,
           email: formData.email,
-          password: formData.password, // En producción esto se hashearía
+          password: formData.password,
           role: formData.role,
           teamId: formData.teamId || undefined,
-          avatar: undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          team: teams.find(team => team.id === formData.teamId) || null,
-        }
-        setUsers([...users, newUser])
+        })
+        
+        setUsers([newUser, ...users])
         setSnackbar({
           open: true,
           message: 'Usuario creado correctamente',
@@ -265,9 +187,10 @@ export default function AdminUsersPage() {
       }
       handleCloseDialog()
     } catch (error) {
+      console.error('Error submitting user:', error)
       setSnackbar({
         open: true,
-        message: 'Error al procesar la operación',
+        message: error instanceof Error ? error.message : 'Error al procesar la operación',
         severity: 'error'
       })
     }
@@ -276,14 +199,15 @@ export default function AdminUsersPage() {
   const handleDelete = async (userId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        const updatedUsers = users.filter(user => user.id !== userId)
-        setUsers(updatedUsers)
+        await UserService.deleteUser(userId)
+        setUsers(users.filter(user => user.id !== userId))
         setSnackbar({
           open: true,
           message: 'Usuario eliminado correctamente',
           severity: 'success'
         })
       } catch (error) {
+        console.error('Error deleting user:', error)
         setSnackbar({
           open: true,
           message: 'Error al eliminar el usuario',
@@ -309,7 +233,7 @@ export default function AdminUsersPage() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return <AdminPanelSettings />
+        return <Person />
       case 'MANAGER':
         return <Business />
       case 'USER':
@@ -325,6 +249,14 @@ export default function AdminUsersPage() {
 
   if (!isAdmin) {
     return null
+  }
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    )
   }
 
   return (
@@ -407,7 +339,7 @@ export default function AdminUsersPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {user.createdAt.toLocaleDateString('es-ES')}
+                    {new Date(user.createdAt).toLocaleDateString('es-ES')}
                   </TableCell>
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
