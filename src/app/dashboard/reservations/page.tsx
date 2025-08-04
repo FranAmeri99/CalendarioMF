@@ -44,7 +44,7 @@ import {
   Delete as DeleteIcon,
   CalendarToday,
 } from '@mui/icons-material'
-import UntitledCalendar from '@/components/Calendar/UntitledCalendar'
+import { ModernCalendarView } from '@/components/Calendar/ModernCalendarView'
 
 interface Reservation {
   id: string
@@ -339,7 +339,7 @@ export default function ReservationsPage() {
 
       {/* Vista de Calendario */}
       {viewMode === 'calendar' && (
-        <UntitledCalendar
+        <ModernCalendarView
           reservations={reservations}
           users={users}
           teams={teams}
