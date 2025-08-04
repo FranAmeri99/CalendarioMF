@@ -98,6 +98,7 @@ export default function ReservationsPage() {
     teamId: '',
   })
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
+  const [maxSpots, setMaxSpots] = useState(12)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   useEffect(() => {
@@ -115,26 +116,39 @@ export default function ReservationsPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/reservations')
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // Obtener datos de reservas y configuración en paralelo
+      const [reservationsResponse, configResponse] = await Promise.all([
+        fetch('/api/reservations'),
+        fetch('/api/config')
+      ])
+      
+      if (!reservationsResponse.ok) {
+        throw new Error(`HTTP error! status: ${reservationsResponse.status}`)
       }
       
-      const data = await response.json()
+      const reservationsData = await reservationsResponse.json()
       
-      if (data.error) {
-        throw new Error(data.error)
+      if (reservationsData.error) {
+        throw new Error(reservationsData.error)
       }
 
       // Asegurar que todas las reservas tengan el campo status
-      const reservationsWithStatus = data.reservations.map((reservation: any) => ({
+      const reservationsWithStatus = reservationsData.reservations.map((reservation: any) => ({
         ...reservation,
         status: reservation.status || 'confirmed'
       }))
       setReservations(reservationsWithStatus)
-      setUsers(data.users)
-      setTeams(data.teams)
+      setUsers(reservationsData.users)
+      setTeams(reservationsData.teams)
+
+      // Obtener configuración del sistema
+      if (configResponse.ok) {
+        const configData = await configResponse.json()
+        if (configData.config?.maxSpotsPerDay) {
+          setMaxSpots(configData.config.maxSpotsPerDay)
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -350,7 +364,7 @@ export default function ReservationsPage() {
           users={users}
           teams={teams}
           currentUser={session?.user as User}
-          maxSpots={12}
+          maxSpots={maxSpots}
           onCreateReservation={async (date: string) => {
             // Crear reserva automáticamente para el usuario actual
             const currentUserId = session?.user?.id

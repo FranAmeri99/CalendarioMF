@@ -38,17 +38,27 @@ interface WeeklyOccupationProps {
 }
 
 export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccupationProps) {
-  const today = new Date()
-  const startOfCurrentWeek = dayjs(today).startOf('week') // Lunes como inicio de semana
+  const today = dayjs().startOf('day')
+  const startOfCurrentWeek = today.startOf('week') // Lunes como inicio de semana
 
   const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).add(i, 'day'))
 
   const getReservationsForDay = (date: dayjs.Dayjs) => {
-    return reservations.filter(reservation => {
+    const dayReservations = reservations.filter(reservation => {
       const reservationDate = dayjs(reservation.date).startOf('day')
       const compareDate = date.startOf('day')
-      return compareDate.isSame(reservationDate, 'day')
-    }).length
+      const isSame = compareDate.isSame(reservationDate, 'day')
+      
+      // Debug log para el miércoles
+      if (date.format('dddd') === 'miércoles') {
+        console.log(`🔍 Miércoles debug: ${date.format('YYYY-MM-DD')} vs ${reservationDate.format('YYYY-MM-DD')} = ${isSame}`)
+      }
+      
+      return isSame
+    })
+    
+    console.log(`📅 ${date.format('dddd')} (${date.format('YYYY-MM-DD')}): ${dayReservations.length} reservas`)
+    return dayReservations.length
   }
 
   const getOccupationPercentage = (date: dayjs.Dayjs) => {
