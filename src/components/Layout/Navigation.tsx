@@ -28,6 +28,7 @@ import {
   Business,
   Person,
   ExitToApp,
+  Settings,
 } from '@mui/icons-material'
 
 const menuItems = [
@@ -36,6 +37,11 @@ const menuItems = [
   { text: 'Personas', icon: <People />, path: '/dashboard/users' },
   { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
   { text: 'Perfil', icon: <Person />, path: '/dashboard/profile' },
+]
+
+// Menú de administración solo para admins
+const adminMenuItems = [
+  { text: 'Admin Usuarios', icon: <Settings />, path: '/dashboard/admin/users' },
 ]
 
 export default function Navigation() {
@@ -135,18 +141,38 @@ export default function Navigation() {
         onClose={() => setDrawerOpen(false)}
       >
         <Box sx={{ width: 250 }} role="presentation">
-          <List>
-            {menuItems.map((item) => (
-              <ListItem
-                button
-                key={item.text}
-                onClick={() => handleNavigation(item.path)}
-              >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItem>
-            ))}
-          </List>
+                     <List>
+             {menuItems.map((item) => (
+               <ListItem
+                 button
+                 key={item.text}
+                 onClick={() => handleNavigation(item.path)}
+               >
+                 <ListItemIcon>{item.icon}</ListItemIcon>
+                 <ListItemText primary={item.text} />
+               </ListItem>
+             ))}
+             
+             {/* Menú de administración solo para admins */}
+             {session?.user?.role === 'ADMIN' && (
+               <>
+                 <Divider sx={{ my: 1 }} />
+                 <Typography variant="caption" sx={{ px: 2, color: 'text.secondary' }}>
+                   Administración
+                 </Typography>
+                 {adminMenuItems.map((item) => (
+                   <ListItem
+                     button
+                     key={item.text}
+                     onClick={() => handleNavigation(item.path)}
+                   >
+                     <ListItemIcon>{item.icon}</ListItemIcon>
+                     <ListItemText primary={item.text} />
+                   </ListItem>
+                 ))}
+               </>
+             )}
+           </List>
         </Box>
       </Drawer>
     </>
