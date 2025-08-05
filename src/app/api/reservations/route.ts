@@ -43,16 +43,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 UTC
+    // Convertir la fecha correctamente para evitar problemas de zona horaria
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en UTC
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en UTC para evitar problemas de zona horaria
-      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)) // 12:00 UTC
+      // Crear fecha en zona horaria local para evitar problemas de UTC
+      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
     }
 
     // Crear la reserva directamente con Prisma para evitar problemas con el servicio
@@ -92,16 +92,16 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Convertir la fecha a formato completo con hora 12:00:00 UTC
+    // Convertir la fecha correctamente para evitar problemas de zona horaria
     let reservationDate: Date
     if (typeof date === 'string' && date.includes('T')) {
       // Si ya es una fecha completa, usarla tal como está
       reservationDate = new Date(date)
     } else {
-      // Si es solo una fecha (YYYY-MM-DD), crear fecha en UTC
+      // Si es solo una fecha (YYYY-MM-DD), crear fecha en zona horaria local
       const [year, month, day] = date.split('-').map(Number)
-      // Crear fecha en UTC para evitar problemas de zona horaria
-      reservationDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0)) // 12:00 UTC
+      // Crear fecha en zona horaria local para evitar problemas de UTC
+      reservationDate = new Date(year, month - 1, day, 12, 0, 0) // 12:00 hora local
     }
 
     const reservation = await ReservationService.updateReservation(id, {
