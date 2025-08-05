@@ -306,21 +306,9 @@ export default function ReservationsPage() {
 
   const handleCreateBooking = async (formData: FormData) => {
     try {
-      // Obtener fecha y hora por separado
-      const startDate = formData.get('startDate') as string
+      // Obtener fechas directamente del input datetime-local
       const startTime = formData.get('startTime') as string
-      const endDate = formData.get('endDate') as string
       const endTime = formData.get('endTime') as string
-
-      // Convertir formato dd/mm/yyyy a yyyy-mm-dd
-      const parseDateForAPI = (dateStr: string) => {
-        const [day, month, year] = dateStr.split('/').map(Number)
-        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-      }
-
-      // Crear fechas completas para la API
-      const startDateTime = `${parseDateForAPI(startDate)}T${startTime}`
-      const endDateTime = `${parseDateForAPI(endDate)}T${endTime}`
 
       const response = await fetch('/api/meeting-room-bookings', {
         method: 'POST',
@@ -330,8 +318,8 @@ export default function ReservationsPage() {
         body: JSON.stringify({
           title: formData.get('title'),
           description: formData.get('description'),
-          startTime: startDateTime,
-          endTime: endDateTime,
+          startTime: startTime,
+          endTime: endTime,
           userId: session?.user?.id,
           meetingRoomId: selectedRoom?.id,
         }),
@@ -876,92 +864,34 @@ export default function ReservationsPage() {
                   <label htmlFor="startTime" className="text-sm font-medium">
                     Inicio
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="startDate"
-                      name="startDate"
-                      type="text"
-                      required
-                      defaultValue={selectedDate ? formatDateForDisplay(createDateFromString(selectedDate)) : ''}
-                      onChange={(e) => {
-                        const formatted = formatDateInput(e.target.value)
-                        e.target.value = formatted
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value && !validateDate(e.target.value)) {
-                          e.target.style.borderColor = '#ef4444'
-                          e.target.style.color = '#ef4444'
-                        } else {
-                          e.target.style.borderColor = ''
-                          e.target.style.color = ''
-                        }
-                      }}
-                      className="flex-1 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{ 
-                        'font-family': 'monospace',
-                        'text-align': 'center'
-                      } as React.CSSProperties}
-                      placeholder="dd/mm/yyyy"
-                      maxLength={10}
-                    />
-                    <input
-                      id="startTime"
-                      name="startTime"
-                      type="time"
-                      required
-                      defaultValue="09:00"
-                      className="w-24 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{ 
-                        'font-family': 'monospace'
-                      } as React.CSSProperties}
-                    />
-                  </div>
+                  <input
+                    id="startTime"
+                    name="startTime"
+                    type="datetime-local"
+                    required
+                    defaultValue={selectedDate ? `${selectedDate}T09:00` : ''}
+                    className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ 
+                      'font-family': 'monospace'
+                    } as React.CSSProperties}
+                  />
                 </div>
                 
                 <div className="grid gap-2 sm:gap-3">
                   <label htmlFor="endTime" className="text-sm font-medium">
                     Fin
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      id="endDate"
-                      name="endDate"
-                      type="text"
-                      required
-                      defaultValue={selectedDate ? formatDateForDisplay(createDateFromString(selectedDate)) : ''}
-                      onChange={(e) => {
-                        const formatted = formatDateInput(e.target.value)
-                        e.target.value = formatted
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value && !validateDate(e.target.value)) {
-                          e.target.style.borderColor = '#ef4444'
-                          e.target.style.color = '#ef4444'
-                        } else {
-                          e.target.style.borderColor = ''
-                          e.target.style.color = ''
-                        }
-                      }}
-                      className="flex-1 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{ 
-                        'font-family': 'monospace',
-                        'text-align': 'center'
-                      } as React.CSSProperties}
-                      placeholder="dd/mm/yyyy"
-                      maxLength={10}
-                    />
-                    <input
-                      id="endTime"
-                      name="endTime"
-                      type="time"
-                      required
-                      defaultValue="10:00"
-                      className="w-24 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{ 
-                        'font-family': 'monospace'
-                      } as React.CSSProperties}
-                    />
-                  </div>
+                  <input
+                    id="endTime"
+                    name="endTime"
+                    type="datetime-local"
+                    required
+                    defaultValue={selectedDate ? `${selectedDate}T10:00` : ''}
+                    className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ 
+                      'font-family': 'monospace'
+                    } as React.CSSProperties}
+                  />
                 </div>
               </div>
             </div>
