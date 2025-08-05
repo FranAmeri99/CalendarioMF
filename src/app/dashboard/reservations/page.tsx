@@ -91,16 +91,21 @@ export default function ReservationsPage() {
 
       if (roomsResponse.ok) {
         const rooms = await roomsResponse.json()
+        console.log('🏢 Salas recibidas:', rooms.length)
         setMeetingRooms(rooms)
       }
 
       if (bookingsResponse.ok) {
         const bookingsData = await bookingsResponse.json()
+        console.log('📅 Reservas de salas recibidas:', bookingsData.length)
+        console.log('📅 Detalles de reservas:', bookingsData)
         setBookings(bookingsData)
       }
 
       if (calendarResponse.ok) {
         const calendarData = await calendarResponse.json()
+        console.log('👥 Reservas de asistencia recibidas:', calendarData.reservations?.length || 0)
+        console.log('👥 Detalles de reservas de asistencia:', calendarData.reservations)
         setAttendanceReservations(calendarData.reservations || [])
         if (calendarData.config?.maxSpotsPerDay) {
           setMaxSpotsPerDay(calendarData.config.maxSpotsPerDay)
