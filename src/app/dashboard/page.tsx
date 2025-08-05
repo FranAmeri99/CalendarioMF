@@ -124,16 +124,16 @@ export default function Dashboard() {
   return (
     <Container maxWidth="xl" sx={{ p: 0 }}>
       {/* Header */}
-      <Box mb="32px">
+      <Box mb={{ xs: '24px', sm: '32px' }}>
         <Typography
           variant="h3"
           component="h1"
           sx={{
             fontWeight: 700,
             color: '#1a1a1a',
-            mb: '8px',
-            fontSize: '32px',
-            lineHeight: '40px'
+            mb: { xs: '4px', sm: '8px' },
+            fontSize: { xs: '24px', sm: '28px', md: '32px' },
+            lineHeight: { xs: '32px', sm: '36px', md: '40px' }
           }}
         >
           Dashboard
@@ -143,8 +143,8 @@ export default function Dashboard() {
           color="text.secondary"
           sx={{
             fontWeight: 400,
-            fontSize: '16px',
-            lineHeight: '24px'
+            fontSize: { xs: '14px', sm: '16px' },
+            lineHeight: { xs: '20px', sm: '24px' }
           }}
         >
           Bienvenido de vuelta, {session.user?.name}
@@ -152,8 +152,8 @@ export default function Dashboard() {
       </Box>
 
       {/* Métricas principales */}
-      <Grid container spacing="24px" mb="32px">
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid container spacing={{ xs: 2, sm: 3, md: 3 }} mb={{ xs: '24px', sm: '32px' }}>
+        <Grid item xs={6} sm={6} md={3}>
           <MetricCard
             title="Ocupación Hoy"
             value={`${stats.reservedSpots}/${stats.maxSpots}`}
@@ -162,7 +162,7 @@ export default function Dashboard() {
             color="primary"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <MetricCard
             title="Promedio Semanal"
             value={`${stats.weeklyAverage}%`}
@@ -171,7 +171,7 @@ export default function Dashboard() {
             color="secondary"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <MetricCard
             title="Total Empleados"
             value={stats.totalUsers}
@@ -180,7 +180,7 @@ export default function Dashboard() {
             color="success"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={6} sm={6} md={3}>
           <MetricCard
             title="Mis Reservas"
             value={reservations.filter(r => {
@@ -196,7 +196,7 @@ export default function Dashboard() {
       </Grid>
 
       {/* Secciones principales */}
-      <Grid container spacing="24px">
+      <Grid container spacing={{ xs: 2, sm: 3, md: 3 }}>
         <Grid item xs={12} md={6}>
           <UpcomingReservations reservations={reservations} />
         </Grid>
@@ -206,13 +206,13 @@ export default function Dashboard() {
       </Grid>
 
       {/* Acciones rápidas */}
-      <Box mt="32px">
+      <Box mt={{ xs: '24px', sm: '32px' }}>
         <Paper
           sx={{
-            p: '24px',
+            p: { xs: '16px', sm: '24px' },
             background: '#ffffff',
             border: '1px solid #e8e8e8',
-            borderRadius: '16px',
+            borderRadius: { xs: '12px', sm: '16px' },
             boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
           }}
         >
@@ -220,28 +220,29 @@ export default function Dashboard() {
             variant="h6"
             sx={{
               fontWeight: 600,
-              mb: '16px',
-              fontSize: '18px',
-              lineHeight: '24px',
+              mb: { xs: '12px', sm: '16px' },
+              fontSize: { xs: '16px', sm: '18px' },
+              lineHeight: { xs: '20px', sm: '24px' },
               color: '#1a1a1a'
             }}
           >
             Acciones Rápidas
           </Typography>
-          <Box display="flex" gap="16px" flexWrap="wrap">
+          <Box display="flex" gap={{ xs: '8px', sm: '16px' }} flexWrap="wrap" flexDirection={{ xs: 'column', sm: 'row' }}>
             <Button
               variant="contained"
               startIcon={<CalendarToday />}
               onClick={() => router.push('/dashboard/reservations')}
               sx={{
-                borderRadius: '12px',
+                borderRadius: { xs: '8px', sm: '12px' },
                 textTransform: 'none',
                 fontWeight: 600,
-                px: '24px',
-                py: '12px',
-                fontSize: '14px',
-                lineHeight: '20px',
+                px: { xs: '16px', sm: '24px' },
+                py: { xs: '10px', sm: '12px' },
+                fontSize: { xs: '13px', sm: '14px' },
+                lineHeight: { xs: '18px', sm: '20px' },
                 bgcolor: '#1976d2',
+                width: { xs: '100%', sm: 'auto' },
                 '&:hover': {
                   bgcolor: '#1565c0'
                 }
@@ -254,15 +255,16 @@ export default function Dashboard() {
               startIcon={<Business />}
               onClick={() => router.push('/dashboard/teams')}
               sx={{
-                borderRadius: '12px',
+                borderRadius: { xs: '8px', sm: '12px' },
                 textTransform: 'none',
                 fontWeight: 600,
-                px: '24px',
-                py: '12px',
-                fontSize: '14px',
-                lineHeight: '20px',
+                px: { xs: '16px', sm: '24px' },
+                py: { xs: '10px', sm: '12px' },
+                fontSize: { xs: '13px', sm: '14px' },
+                lineHeight: { xs: '18px', sm: '20px' },
                 borderColor: '#e0e0e0',
                 color: '#1a1a1a',
+                width: { xs: '100%', sm: 'auto' },
                 '&:hover': {
                   borderColor: '#1976d2',
                   bgcolor: 'rgba(25, 118, 210, 0.04)'
@@ -276,15 +278,16 @@ export default function Dashboard() {
               startIcon={<People />}
               onClick={() => router.push('/dashboard/users')}
               sx={{
-                borderRadius: '12px',
+                borderRadius: { xs: '8px', sm: '12px' },
                 textTransform: 'none',
                 fontWeight: 600,
-                px: '24px',
-                py: '12px',
-                fontSize: '14px',
-                lineHeight: '20px',
+                px: { xs: '16px', sm: '24px' },
+                py: { xs: '10px', sm: '12px' },
+                fontSize: { xs: '13px', sm: '14px' },
+                lineHeight: { xs: '18px', sm: '20px' },
                 borderColor: '#e0e0e0',
                 color: '#1a1a1a',
+                width: { xs: '100%', sm: 'auto' },
                 '&:hover': {
                   borderColor: '#1976d2',
                   bgcolor: 'rgba(25, 118, 210, 0.04)'

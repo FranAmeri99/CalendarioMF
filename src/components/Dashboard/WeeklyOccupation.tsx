@@ -98,22 +98,22 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
   return (
     <Paper
       sx={{
-        p: '24px',
+        p: { xs: '16px', sm: '20px', md: '24px' },
         background: '#ffffff',
         border: '1px solid #e8e8e8',
-        borderRadius: '16px',
+        borderRadius: { xs: '12px', sm: '16px' },
         boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
         height: '100%',
       }}
     >
-      <Box display="flex" alignItems="center" mb="24px">
-        <Business sx={{ mr: '8px', color: '#1976d2' }} />
+      <Box display="flex" alignItems="center" mb={{ xs: '16px', sm: '20px', md: '24px' }}>
+        <Business sx={{ mr: { xs: '6px', sm: '8px' }, color: '#1976d2' }} />
         <Typography
           variant="h6"
           sx={{
             fontWeight: 600,
-            fontSize: '18px',
-            lineHeight: '24px',
+            fontSize: { xs: '16px', sm: '18px' },
+            lineHeight: { xs: '20px', sm: '24px' },
             color: '#1a1a1a'
           }}
         >
@@ -121,7 +121,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
         </Typography>
       </Box>
 
-      <Grid container spacing="8px">
+      <Grid container spacing={{ xs: '4px', sm: '6px', md: '8px' }}>
         {weekDays.map((day, index) => {
           const occupation = getReservationsForDay(day)
           const percentage = getOccupationPercentage(day)
@@ -135,8 +135,8 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  p: '12px',
-                  borderRadius: '8px',
+                  p: { xs: '8px', sm: '10px', md: '12px' },
+                  borderRadius: { xs: '6px', sm: '8px' },
                   bgcolor: isToday ? '#f5f5f5' : 'transparent',
                   border: isToday ? '1px solid #e0e0e0' : 'none',
                 }}
@@ -146,8 +146,8 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      fontSize: '12px',
-                      lineHeight: '16px',
+                      fontSize: { xs: '11px', sm: '12px' },
+                      lineHeight: { xs: '14px', sm: '16px' },
                       color: '#1a1a1a',
                       textTransform: 'capitalize'
                     }}
@@ -158,21 +158,21 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                     variant="caption"
                     color="text.secondary"
                     sx={{
-                      fontSize: '10px',
-                      lineHeight: '14px'
+                      fontSize: { xs: '9px', sm: '10px' },
+                      lineHeight: { xs: '12px', sm: '14px' }
                     }}
                   >
                     {day.format('d/M')}
                   </Typography>
                 </Box>
 
-                <Box display="flex" alignItems="center" gap="8px">
+                <Box display="flex" alignItems="center" gap={{ xs: '4px', sm: '6px', md: '8px' }}>
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      fontSize: '12px',
-                      lineHeight: '16px',
+                      fontSize: { xs: '11px', sm: '12px' },
+                      lineHeight: { xs: '14px', sm: '16px' },
                       color: '#1a1a1a'
                     }}
                   >
@@ -180,9 +180,9 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                   </Typography>
                   <Box
                     sx={{
-                      width: '40px',
-                      height: '8px',
-                      borderRadius: '4px',
+                      width: { xs: '32px', sm: '36px', md: '40px' },
+                      height: { xs: '6px', sm: '7px', md: '8px' },
+                      borderRadius: { xs: '3px', sm: '4px' },
                       bgcolor: '#e0e0e0',
                       position: 'relative',
                       overflow: 'hidden'
@@ -196,7 +196,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                         height: '100%',
                         width: `${percentage}%`,
                         bgcolor: color,
-                        borderRadius: '4px',
+                        borderRadius: { xs: '3px', sm: '4px' },
                         transition: 'width 0.3s ease'
                       }}
                     />
@@ -205,10 +205,10 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                     variant="caption"
                     sx={{
                       fontWeight: 600,
-                      fontSize: '10px',
-                      lineHeight: '14px',
+                      fontSize: { xs: '9px', sm: '10px' },
+                      lineHeight: { xs: '12px', sm: '14px' },
                       color: color,
-                      minWidth: '24px',
+                      minWidth: { xs: '20px', sm: '24px' },
                       textAlign: 'right'
                     }}
                   >
@@ -221,28 +221,48 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
         })}
       </Grid>
 
-      <Box mt="16px" display="flex" gap="16px" flexWrap="wrap">
-        <Box display="flex" alignItems="center" gap="4px">
-          <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', bgcolor: '#4caf50' }} />
-          <Typography variant="caption" color="text.secondary">
+      <Box mt={{ xs: '12px', sm: '16px' }} display="flex" gap={{ xs: '8px', sm: '12px', md: '16px' }} flexWrap="wrap">
+        <Box display="flex" alignItems="center" gap={{ xs: '2px', sm: '4px' }}>
+          <Box sx={{ 
+            width: { xs: '10px', sm: '12px' }, 
+            height: { xs: '10px', sm: '12px' }, 
+            borderRadius: { xs: '1px', sm: '2px' }, 
+            bgcolor: '#4caf50' 
+          }} />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '10px', sm: '12px' } }}>
             Disponible
           </Typography>
         </Box>
-        <Box display="flex" alignItems="center" gap="4px">
-          <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', bgcolor: '#fbc02d' }} />
-          <Typography variant="caption" color="text.secondary">
+        <Box display="flex" alignItems="center" gap={{ xs: '2px', sm: '4px' }}>
+          <Box sx={{ 
+            width: { xs: '10px', sm: '12px' }, 
+            height: { xs: '10px', sm: '12px' }, 
+            borderRadius: { xs: '1px', sm: '2px' }, 
+            bgcolor: '#fbc02d' 
+          }} />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '10px', sm: '12px' } }}>
             Moderado
           </Typography>
         </Box>
-        <Box display="flex" alignItems="center" gap="4px">
-          <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', bgcolor: '#f57c00' }} />
-          <Typography variant="caption" color="text.secondary">
+        <Box display="flex" alignItems="center" gap={{ xs: '2px', sm: '4px' }}>
+          <Box sx={{ 
+            width: { xs: '10px', sm: '12px' }, 
+            height: { xs: '10px', sm: '12px' }, 
+            borderRadius: { xs: '1px', sm: '2px' }, 
+            bgcolor: '#f57c00' 
+          }} />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '10px', sm: '12px' } }}>
             Ocupado
           </Typography>
         </Box>
-        <Box display="flex" alignItems="center" gap="4px">
-          <Box sx={{ width: '12px', height: '12px', borderRadius: '2px', bgcolor: '#d32f2f' }} />
-          <Typography variant="caption" color="text.secondary">
+        <Box display="flex" alignItems="center" gap={{ xs: '2px', sm: '4px' }}>
+          <Box sx={{ 
+            width: { xs: '10px', sm: '12px' }, 
+            height: { xs: '10px', sm: '12px' }, 
+            borderRadius: { xs: '1px', sm: '2px' }, 
+            bgcolor: '#d32f2f' 
+          }} />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '10px', sm: '12px' } }}>
             Completo
           </Typography>
         </Box>

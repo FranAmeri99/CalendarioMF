@@ -237,15 +237,22 @@ export default function TeamsPage() {
 
   return (
     <Container maxWidth="xl" sx={{ p: 0 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb="32px">
+      <Box 
+        display="flex" 
+        justifyContent="space-between" 
+        alignItems={{ xs: 'flex-start', sm: 'center' }} 
+        mb={{ xs: '24px', sm: '32px' }}
+        flexDirection={{ xs: 'column', sm: 'row' }}
+        gap={{ xs: 2, sm: 0 }}
+      >
         <Typography
           variant="h3"
           component="h1"
           sx={{
             fontWeight: 700,
             color: '#1a1a1a',
-            fontSize: '32px',
-            lineHeight: '40px'
+            fontSize: { xs: '24px', sm: '28px', md: '32px' },
+            lineHeight: { xs: '32px', sm: '36px', md: '40px' }
           }}
         >
           Gestión de Equipos
@@ -255,14 +262,15 @@ export default function TeamsPage() {
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
           sx={{
-            borderRadius: '12px',
+            borderRadius: { xs: '8px', sm: '12px' },
             textTransform: 'none',
             fontWeight: 600,
-            px: '24px',
-            py: '12px',
-            fontSize: '14px',
-            lineHeight: '20px',
+            px: { xs: '16px', sm: '24px' },
+            py: { xs: '10px', sm: '12px' },
+            fontSize: { xs: '13px', sm: '14px' },
+            lineHeight: { xs: '18px', sm: '20px' },
             bgcolor: '#1976d2',
+            width: { xs: '100%', sm: 'auto' },
             '&:hover': {
               bgcolor: '#1565c0'
             }
@@ -276,31 +284,72 @@ export default function TeamsPage() {
         sx={{
           background: '#ffffff',
           border: '1px solid #e8e8e8',
-          borderRadius: '16px',
+          borderRadius: { xs: '12px', sm: '16px' },
           boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
           overflow: 'hidden'
         }}
       >
-        <TableContainer>
+        <TableContainer sx={{ 
+          '& .MuiTable-root': {
+            minWidth: { xs: 650, sm: 800 }
+          }
+        }}>
           <Table>
             <TableHead>
               <TableRow sx={{ bgcolor: '#fafafa' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Equipo</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Descripción</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Líder</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Miembros</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1a1a1a' }}>Acciones</TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '16px' }
+                }}>
+                  Equipo
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '16px' },
+                  display: { xs: 'none', md: 'table-cell' }
+                }}>
+                  Descripción
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '16px' }
+                }}>
+                  Líder
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '16px' },
+                  display: { xs: 'none', lg: 'table-cell' }
+                }}>
+                  Miembros
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 600, 
+                  color: '#1a1a1a',
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '16px' }
+                }}>
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {teams.map((team) => (
                 <TableRow key={team.id} hover>
-                  <TableCell>
-                    <Box display="flex" alignItems="center" gap="12px">
+                  <TableCell sx={{ padding: { xs: '8px 4px', sm: '16px' } }}>
+                    <Box display="flex" alignItems="center" gap={{ xs: '8px', sm: '12px' }}>
                       <Box
                         sx={{
-                          width: 40,
-                          height: 40,
+                          width: { xs: 32, sm: 40 },
+                          height: { xs: 32, sm: 40 },
                           borderRadius: '50%',
                           bgcolor: '#9c27b0',
                           display: 'flex',
@@ -308,33 +357,59 @@ export default function TeamsPage() {
                           justifyContent: 'center',
                           color: 'white',
                           fontWeight: 600,
-                          fontSize: '16px'
+                          fontSize: { xs: '14px', sm: '16px' }
                         }}
                       >
-                        <Business sx={{ fontSize: 20 }} />
+                        <Business sx={{ fontSize: { xs: 16, sm: 20 } }} />
                       </Box>
-                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          fontWeight: 600,
+                          fontSize: { xs: '13px', sm: '16px' }
+                        }}
+                      >
                         {team.name}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
+                  <TableCell sx={{ 
+                    padding: { xs: '8px 4px', sm: '16px' },
+                    display: { xs: 'none', md: 'table-cell' }
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '11px', sm: '14px' } }}
+                    >
                       {team.description || 'Sin descripción'}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ padding: { xs: '8px 4px', sm: '16px' } }}>
                     {team.leader ? (
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 500,
+                          fontSize: { xs: '11px', sm: '14px' }
+                        }}
+                      >
                         {team.leader.name}
                       </Typography>
                     ) : (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '11px', sm: '14px' } }}
+                      >
                         Sin líder asignado
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ 
+                    padding: { xs: '8px 4px', sm: '16px' },
+                    display: { xs: 'none', lg: 'table-cell' }
+                  }}>
                     {team.members && team.members.length > 0 ? (
                       <Box display="flex" gap="4px" flexWrap="wrap">
                         {team.members.slice(0, 3).map((member) => (
@@ -345,8 +420,8 @@ export default function TeamsPage() {
                             sx={{
                               bgcolor: '#e3f2fd',
                               color: '#1976d2',
-                              fontSize: '10px',
-                              height: '20px'
+                              fontSize: { xs: '9px', sm: '10px' },
+                              height: { xs: '18px', sm: '20px' }
                             }}
                           />
                         ))}
@@ -357,33 +432,43 @@ export default function TeamsPage() {
                             sx={{
                               bgcolor: '#f5f5f5',
                               color: '#666',
-                              fontSize: '10px',
-                              height: '20px'
+                              fontSize: { xs: '9px', sm: '10px' },
+                              height: { xs: '18px', sm: '20px' }
                             }}
                           />
                         )}
                       </Box>
                     ) : (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '11px', sm: '14px' } }}
+                      >
                         Sin miembros
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Box display="flex" gap="8px">
+                  <TableCell sx={{ padding: { xs: '8px 4px', sm: '16px' } }}>
+                    <Box display="flex" gap={{ xs: '4px', sm: '8px' }}>
                       <IconButton
                         size="small"
                         onClick={() => handleOpenDialog(team)}
-                        sx={{ color: '#1976d2' }}
+                        sx={{ 
+                          color: '#1976d2',
+                          padding: { xs: '4px', sm: '8px' }
+                        }}
                       >
-                        <EditIcon />
+                        <EditIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                       </IconButton>
                       <IconButton
                         size="small"
                         onClick={() => handleDelete(team.id)}
-                        sx={{ color: '#d32f2f' }}
+                        sx={{ 
+                          color: '#d32f2f',
+                          padding: { xs: '4px', sm: '8px' }
+                        }}
                       >
-                        <DeleteIcon />
+                        <DeleteIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                       </IconButton>
                     </Box>
                   </TableCell>
@@ -395,12 +480,26 @@ export default function TeamsPage() {
       </Paper>
 
       {/* Dialog para crear/editar equipo */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={dialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: '12px', sm: '16px' },
+            margin: { xs: '16px', sm: '32px' }
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontSize: { xs: '18px', sm: '20px' },
+          padding: { xs: '20px 24px 0', sm: '24px 24px 0' }
+        }}>
           {editingTeam ? 'Editar Equipo' : 'Nuevo Equipo'}
         </DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap="16px" mt="8px">
+        <DialogContent sx={{ padding: { xs: '16px 24px', sm: '20px 24px' } }}>
+          <Box display="flex" flexDirection="column" gap={{ xs: '12px', sm: '16px' }} mt="8px">
             <TextField
               label="Nombre del equipo"
               value={formData.name}
@@ -408,6 +507,11 @@ export default function TeamsPage() {
               fullWidth
               size="small"
               required
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: { xs: '48px', sm: '56px' }
+                }
+              }}
             />
 
             <TextField
@@ -418,6 +522,11 @@ export default function TeamsPage() {
               size="small"
               multiline
               rows={3}
+              sx={{
+                '& .MuiInputBase-root': {
+                  minHeight: { xs: '80px', sm: '100px' }
+                }
+              }}
             />
 
             <FormControl fullWidth size="small">
@@ -426,6 +535,11 @@ export default function TeamsPage() {
                 value={formData.leaderId}
                 onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
                 label="Líder del equipo (opcional)"
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '48px', sm: '56px' }
+                  }
+                }}
               >
                 <MenuItem value="">
                   <em>Sin líder asignado</em>
@@ -439,9 +553,27 @@ export default function TeamsPage() {
             </FormControl>
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSubmit} variant="contained">
+        <DialogActions sx={{ 
+          padding: { xs: '16px 24px 20px', sm: '20px 24px 24px' },
+          gap: { xs: '8px', sm: '12px' }
+        }}>
+          <Button 
+            onClick={handleCloseDialog}
+            sx={{
+              fontSize: { xs: '13px', sm: '14px' },
+              padding: { xs: '8px 16px', sm: '10px 20px' }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            sx={{
+              fontSize: { xs: '13px', sm: '14px' },
+              padding: { xs: '8px 16px', sm: '10px 20px' }
+            }}
+          >
             {editingTeam ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogActions>

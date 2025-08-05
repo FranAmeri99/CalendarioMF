@@ -40,7 +40,7 @@ export default function MetricCard({
         height: '100%',
         background: '#ffffff',
         border: '1px solid #e8e8e8',
-        borderRadius: '16px',
+        borderRadius: { xs: '12px', sm: '16px' },
         boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
         transition: 'all 0.3s ease',
         '&:hover': {
@@ -49,8 +49,8 @@ export default function MetricCard({
         }
       }}
     >
-      <CardContent sx={{ p: '24px' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb="16px">
+      <CardContent sx={{ p: { xs: '16px', sm: '20px', md: '24px' } }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={{ xs: '12px', sm: '16px' }}>
           <Box>
             <Typography 
               variant="h3" 
@@ -58,9 +58,9 @@ export default function MetricCard({
               sx={{ 
                 fontWeight: 700,
                 color: getColorValue(),
-                mb: '4px',
-                fontSize: '32px',
-                lineHeight: '40px'
+                mb: { xs: '2px', sm: '4px' },
+                fontSize: { xs: '24px', sm: '28px', md: '32px' },
+                lineHeight: { xs: '32px', sm: '36px', md: '40px' }
               }}
             >
               {value}
@@ -70,8 +70,8 @@ export default function MetricCard({
               color="text.secondary"
               sx={{ 
                 fontWeight: 500,
-                fontSize: '14px',
-                lineHeight: '20px'
+                fontSize: { xs: '12px', sm: '14px' },
+                lineHeight: { xs: '16px', sm: '20px' }
               }}
             >
               {subtitle}
@@ -81,9 +81,9 @@ export default function MetricCard({
             sx={{ 
               bgcolor: `${getColorValue()}15`,
               color: getColorValue(),
-              width: 56,
-              height: 56,
-              borderRadius: '12px'
+              width: { xs: 40, sm: 48, md: 56 },
+              height: { xs: 40, sm: 48, md: 56 },
+              borderRadius: { xs: '8px', sm: '12px' }
             }}
           >
             {icon}
@@ -96,8 +96,8 @@ export default function MetricCard({
           sx={{ 
             fontWeight: 600,
             color: '#1a1a1a',
-            fontSize: '16px',
-            lineHeight: '24px'
+            fontSize: { xs: '14px', sm: '16px' },
+            lineHeight: { xs: '20px', sm: '24px' }
           }}
         >
           {title}

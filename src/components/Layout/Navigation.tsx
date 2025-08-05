@@ -34,9 +34,7 @@ import {
 
 const menuItems = [
   { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
-  { text: 'Calendario Unificado', icon: <CalendarToday />, path: '/dashboard/unified-calendar' },
   { text: 'Reservas', icon: <CalendarToday />, path: '/dashboard/reservations' },
-  { text: 'Salas de Reuniones', icon: <Home />, path: '/dashboard/meeting-rooms' },
   { text: 'Equipos', icon: <Business />, path: '/dashboard/teams' },
   { text: 'Perfil', icon: <Person />, path: '/dashboard/profile' },
 ]
@@ -79,21 +77,43 @@ export default function Navigation() {
   return (
     <>
       <AppBar position="static">
-        <Toolbar>
+        <Toolbar sx={{ minHeight: { xs: '56px', sm: '64px' } }}>
           <IconButton
             edge="start"
             color="inherit"
             aria-label="menu"
             onClick={() => setDrawerOpen(true)}
-            sx={{ mr: 2 }}
+            sx={{ mr: { xs: 1, sm: 2 } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              display: { xs: 'none', sm: 'block' }
+            }}
+          >
             Sistema de Asistencia
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="body2">
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              flexGrow: 1,
+              fontSize: '1rem',
+              display: { xs: 'block', sm: 'none' }
+            }}
+          >
+            Asistencia
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+            <Typography 
+              variant="body2" 
+              sx={{ display: { xs: 'none', sm: 'block' } }}
+            >
               {session.user?.name}
             </Typography>
             <IconButton
@@ -103,8 +123,9 @@ export default function Navigation() {
               aria-haspopup="true"
               onClick={handleMenu}
               color="inherit"
+              sx={{ p: { xs: 0.5, sm: 1 } }}
             >
-              <Avatar sx={{ width: 32, height: 32 }}>
+              <Avatar sx={{ width: { xs: 28, sm: 32 }, height: { xs: 28, sm: 32 } }}>
                 {session.user?.name?.charAt(0)}
               </Avatar>
             </IconButton>
@@ -145,25 +166,56 @@ export default function Navigation() {
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: '280px', sm: '300px' },
+            backgroundColor: '#fafafa'
+          }
+        }}
       >
-        <Box sx={{ width: 250 }} role="presentation">
-                     <List>
+        <Box role="presentation">
+                     <List sx={{ py: 1 }}>
              {menuItems.map((item) => (
                <ListItem
                  button
                  key={item.text}
                  onClick={() => handleNavigation(item.path)}
+                 sx={{
+                   py: { xs: 2, sm: 1.5 },
+                   px: { xs: 3, sm: 2 },
+                   '&:hover': {
+                     backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                   }
+                 }}
                >
-                 <ListItemIcon>{item.icon}</ListItemIcon>
-                 <ListItemText primary={item.text} />
+                 <ListItemIcon sx={{ minWidth: { xs: 48, sm: 40 } }}>
+                   {item.icon}
+                 </ListItemIcon>
+                 <ListItemText 
+                   primary={item.text} 
+                   sx={{ 
+                     '& .MuiListItemText-primary': {
+                       fontSize: { xs: '1rem', sm: '0.875rem' },
+                       fontWeight: 500
+                     }
+                   }}
+                 />
                </ListItem>
              ))}
              
              {/* Menú de administración solo para admins */}
              {session?.user?.role === 'ADMIN' && (
                <>
-                 <Divider sx={{ my: 1 }} />
-                 <Typography variant="caption" sx={{ px: 2, color: 'text.secondary' }}>
+                 <Divider sx={{ my: { xs: 2, sm: 1 } }} />
+                 <Typography 
+                   variant="caption" 
+                   sx={{ 
+                     px: { xs: 3, sm: 2 }, 
+                     color: 'text.secondary',
+                     fontSize: { xs: '0.75rem', sm: '0.75rem' },
+                     fontWeight: 600
+                   }}
+                 >
                    Administración
                  </Typography>
                  {adminMenuItems.map((item) => (
@@ -171,9 +223,26 @@ export default function Navigation() {
                      button
                      key={item.text}
                      onClick={() => handleNavigation(item.path)}
+                     sx={{
+                       py: { xs: 2, sm: 1.5 },
+                       px: { xs: 3, sm: 2 },
+                       '&:hover': {
+                         backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                       }
+                     }}
                    >
-                     <ListItemIcon>{item.icon}</ListItemIcon>
-                     <ListItemText primary={item.text} />
+                     <ListItemIcon sx={{ minWidth: { xs: 48, sm: 40 } }}>
+                       {item.icon}
+                     </ListItemIcon>
+                     <ListItemText 
+                       primary={item.text} 
+                       sx={{ 
+                         '& .MuiListItemText-primary': {
+                           fontSize: { xs: '1rem', sm: '0.875rem' },
+                           fontWeight: 500
+                         }
+                       }}
+                     />
                    </ListItem>
                  ))}
                </>

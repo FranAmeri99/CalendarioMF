@@ -72,22 +72,22 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
   return (
     <Paper
       sx={{
-        p: '24px',
+        p: { xs: '16px', sm: '20px', md: '24px' },
         background: '#ffffff',
         border: '1px solid #e8e8e8',
-        borderRadius: '16px',
+        borderRadius: { xs: '12px', sm: '16px' },
         boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
         height: '100%',
       }}
     >
-      <Box display="flex" alignItems="center" mb="16px">
-        <CalendarToday sx={{ mr: '8px', color: '#1976d2' }} />
+      <Box display="flex" alignItems="center" mb={{ xs: '12px', sm: '16px' }}>
+        <CalendarToday sx={{ mr: { xs: '6px', sm: '8px' }, color: '#1976d2' }} />
         <Typography
           variant="h6"
           sx={{
             fontWeight: 600,
-            fontSize: '18px',
-            lineHeight: '24px',
+            fontSize: { xs: '16px', sm: '18px' },
+            lineHeight: { xs: '20px', sm: '24px' },
             color: '#1a1a1a'
           }}
         >
@@ -96,8 +96,8 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
       </Box>
 
       {upcomingReservations.length === 0 ? (
-        <Box textAlign="center" py="32px">
-          <Typography color="text.secondary">
+        <Box textAlign="center" py={{ xs: '24px', sm: '32px' }}>
+          <Typography color="text.secondary" sx={{ fontSize: { xs: '14px', sm: '16px' } }}>
             No hay reservas próximas
           </Typography>
         </Box>
@@ -108,7 +108,7 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
               key={reservation.id}
               sx={{
                 px: 0,
-                py: '12px',
+                py: { xs: '8px', sm: '12px' },
                 borderBottom: '1px solid #f0f0f0',
                 '&:last-child': {
                   borderBottom: 'none'
@@ -116,19 +116,23 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
               }}
             >
               <ListItemAvatar>
-                <Avatar sx={{ bgcolor: '#1976d2', width: 32, height: 32 }}>
-                  <Person sx={{ fontSize: 16 }} />
+                <Avatar sx={{ 
+                  bgcolor: '#1976d2', 
+                  width: { xs: 28, sm: 32 }, 
+                  height: { xs: 28, sm: 32 } 
+                }}>
+                  <Person sx={{ fontSize: { xs: 14, sm: 16 } }} />
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
                 primary={
-                  <Box display="flex" alignItems="center" gap="8px">
+                  <Box display="flex" alignItems="center" gap={{ xs: '4px', sm: '8px' }} flexWrap="wrap">
                     <Typography
                       variant="body1"
                       sx={{
                         fontWeight: 600,
-                        fontSize: '14px',
-                        lineHeight: '20px',
+                        fontSize: { xs: '13px', sm: '14px' },
+                        lineHeight: { xs: '18px', sm: '20px' },
                         color: '#1a1a1a'
                       }}
                     >
@@ -141,26 +145,26 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
                         sx={{
                           bgcolor: '#e3f2fd',
                           color: '#1976d2',
-                          fontSize: '10px',
-                          height: '20px'
+                          fontSize: { xs: '9px', sm: '10px' },
+                          height: { xs: '18px', sm: '20px' }
                         }}
                       />
                     )}
                   </Box>
                 }
-                                 secondary={
-                   <Typography
-                     variant="body2"
-                     color="text.secondary"
-                     sx={{
-                       fontSize: '12px',
-                       lineHeight: '16px',
-                       mt: '4px'
-                     }}
-                   >
-                     {dayjs(reservation.date).format('dddd, D [de] MMMM')}
-                   </Typography>
-                 }
+                secondary={
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: { xs: '11px', sm: '12px' },
+                      lineHeight: { xs: '14px', sm: '16px' },
+                      mt: { xs: '2px', sm: '4px' }
+                    }}
+                  >
+                    {dayjs(reservation.date).format('dddd, D [de] MMMM')}
+                  </Typography>
+                }
               />
             </ListItem>
           ))}

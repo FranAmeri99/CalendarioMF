@@ -52,34 +52,48 @@ export default function LoginPage() {
   }
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
         minHeight="100vh"
-        gap={3}
+        gap={{ xs: 2, sm: 3 }}
       >
         <Paper
           elevation={3}
           sx={{
-            p: 4,
+            p: { xs: 3, sm: 4 },
             width: '100%',
-            maxWidth: 400,
+            maxWidth: { xs: '100%', sm: 400 },
+            borderRadius: { xs: '12px', sm: '16px' },
           }}
         >
-          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-            <LockOutlined sx={{ fontSize: 40, color: 'primary.main' }} />
-            <Typography variant="h4" component="h1" gutterBottom>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={{ xs: 1.5, sm: 2 }}>
+            <LockOutlined sx={{ fontSize: { xs: 32, sm: 40 }, color: 'primary.main' }} />
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.5rem', sm: '2.125rem' },
+                textAlign: 'center'
+              }}
+            >
               Iniciar Sesión
             </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              textAlign="center"
+              sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+            >
               Sistema de Gestión de Asistencia
             </Typography>
           </Box>
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: { xs: 2, sm: 3 } }}>
             <TextField
               fullWidth
               label="Email"
@@ -90,6 +104,11 @@ export default function LoginPage() {
               required
               autoComplete="email"
               autoFocus
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: { xs: '48px', sm: '56px' }
+                }
+              }}
             />
             <TextField
               fullWidth
@@ -100,12 +119,22 @@ export default function LoginPage() {
               margin="normal"
               required
               autoComplete="current-password"
+              sx={{
+                '& .MuiInputBase-root': {
+                  height: { xs: '48px', sm: '56px' }
+                }
+              }}
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              sx={{ 
+                mt: { xs: 2, sm: 3 }, 
+                mb: 2,
+                height: { xs: '48px', sm: '56px' },
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
               disabled={loading}
             >
               {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
