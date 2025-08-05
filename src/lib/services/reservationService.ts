@@ -23,6 +23,7 @@ export class ReservationService {
   static async getAllReservations(): Promise<ReservationWithUser[]> {
     try {
       console.log('🔄 Obteniendo reservas...')
+      console.log('🔄 Prisma client:', prisma)
       
       const reservations = await prisma.reservation.findMany({
         include: {
@@ -35,9 +36,16 @@ export class ReservationService {
       })
       
       console.log(`✅ Reservas obtenidas: ${reservations.length}`)
+      console.log('✅ Reservas:', reservations)
+      
       return reservations
     } catch (error) {
       console.error('❌ Error fetching reservations:', error)
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined
+      })
       throw new Error(`Error al obtener reservas: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
