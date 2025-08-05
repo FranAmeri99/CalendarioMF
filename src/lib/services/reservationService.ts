@@ -27,6 +27,11 @@ export class ReservationService {
       console.log('🔄 NODE_ENV:', process.env.NODE_ENV)
       console.log('🔄 Prisma client:', prisma)
       
+      // Primero contar todas las reservas sin filtros
+      const totalCount = await prisma.reservation.count()
+      console.log(`🔍 Total de reservas en BD: ${totalCount}`)
+      
+      // Obtener todas las reservas
       const reservations = await prisma.reservation.findMany({
         include: {
           user: true,
@@ -38,7 +43,9 @@ export class ReservationService {
       })
       
       console.log(`✅ Reservas obtenidas: ${reservations.length}`)
-      console.log('✅ Reservas:', reservations)
+      
+      // Log básico de reservas
+      console.log(`📋 Total de reservas encontradas: ${reservations.length}`)
       
       return reservations
     } catch (error) {
