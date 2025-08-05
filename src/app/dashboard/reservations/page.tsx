@@ -66,6 +66,15 @@ export default function ReservationsPage() {
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedRoom, setSelectedRoom] = useState<MeetingRoom | null>(null)
+  
+  // Estados para el modal de confirmación
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'deleteAttendance' | 'deleteBooking'
+    id: string
+    title: string
+    message: string
+  } | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -236,42 +245,60 @@ export default function ReservationsPage() {
   }
 
   const handleDeleteAttendance = async (reservationId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar tu asistencia?')) return
-
-    try {
-      const response = await fetch(`/api/reservations?id=${reservationId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        toast.success('Asistencia eliminada exitosamente')
-        fetchData()
-      } else {
-        toast.error('Error al eliminar la asistencia')
-      }
-    } catch (error) {
-      console.error('Error deleting attendance:', error)
-      toast.error('Error al eliminar la asistencia')
-    }
+    setConfirmAction({
+      type: 'deleteAttendance',
+      id: reservationId,
+      title: 'Eliminar Asistencia',
+      message: '¿Estás seguro de que quieres eliminar tu asistencia?'
+    })
+    setShowConfirmDialog(true)
   }
 
   const handleDeleteBooking = async (bookingId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta reserva?')) return
+    setConfirmAction({
+      type: 'deleteBooking',
+      id: bookingId,
+      title: 'Eliminar Reserva',
+      message: '¿Estás seguro de que quieres eliminar esta reserva?'
+    })
+    setShowConfirmDialog(true)
+  }
+
+  const handleConfirmAction = async () => {
+    if (!confirmAction) return
 
     try {
-      const response = await fetch(`/api/meeting-room-bookings?id=${bookingId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        toast.success('Reserva eliminada exitosamente')
-        fetchData()
-      } else {
-        toast.error('Error al eliminar la reserva')
+      let response
+      
+      if (confirmAction.type === 'deleteAttendance') {
+        response = await fetch(`/api/reservations?id=${confirmAction.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (response.ok) {
+          toast.success('Asistencia eliminada exitosamente')
+          fetchData()
+        } else {
+          toast.error('Error al eliminar la asistencia')
+        }
+      } else if (confirmAction.type === 'deleteBooking') {
+        response = await fetch(`/api/meeting-room-bookings?id=${confirmAction.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (response.ok) {
+          toast.success('Reserva eliminada exitosamente')
+          fetchData()
+        } else {
+          toast.error('Error al eliminar la reserva')
+        }
       }
     } catch (error) {
-      console.error('Error deleting booking:', error)
-      toast.error('Error al eliminar la reserva')
+      console.error('Error deleting:', error)
+      toast.error('Error al eliminar')
+    } finally {
+      setShowConfirmDialog(false)
+      setConfirmAction(null)
     }
   }
 
@@ -803,6 +830,34 @@ export default function ReservationsPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmación */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="w-[95vw] max-w-[400px] max-h-[200px] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">{confirmAction?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">{confirmAction?.message}</p>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+              className="w-full sm:w-auto h-10 sm:h-12 text-sm font-medium"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmAction}
+              className="w-full sm:w-auto h-10 sm:h-12 text-sm font-medium"
+            >
+              Confirmar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
