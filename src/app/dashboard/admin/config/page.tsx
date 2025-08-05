@@ -29,6 +29,8 @@ import {
 
 // Tipos locales para evitar problemas de importación
 interface SystemConfig {
+  id?: string
+  name?: string
   maxSpotsPerDay: number
   allowWeekendReservations: boolean
   allowHolidayReservations: boolean
@@ -36,6 +38,8 @@ interface SystemConfig {
   minAdvanceBookingHours: number
   autoCancelInactiveReservations: boolean
   inactiveReservationHours: number
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export default function AdminConfigPage() {
@@ -69,20 +73,51 @@ export default function AdminConfigPage() {
       const response = await fetch('/api/config')
       if (response.ok) {
         const configData = await response.json()
-        if (configData.config) {
-          setConfig(configData.config)
+        console.log('Configuración cargada desde la base de datos:', configData)
+        
+        // Verificar si tenemos datos válidos
+        if (configData && typeof configData === 'object') {
+          // Si la respuesta es directamente el objeto de configuración
+          if (configData.maxSpotsPerDay !== undefined) {
+            setConfig(configData)
+          } 
+          // Si la respuesta tiene una propiedad config
+          else if (configData.config && typeof configData.config === 'object') {
+            setConfig(configData.config)
+          }
+          // Si la respuesta tiene una propiedad data
+          else if (configData.data && typeof configData.data === 'object') {
+            setConfig(configData.data)
+          }
+          else {
+            console.log('Formato de respuesta inesperado, usando valores por defecto')
+            setSnackbar({
+              open: true,
+              message: 'Formato de respuesta inesperado, usando valores por defecto',
+              severity: 'warning'
+            })
+          }
         } else {
-          console.log('No se encontró configuración, usando valores por defecto')
+          console.log('No se encontró configuración válida, usando valores por defecto')
+          setSnackbar({
+            open: true,
+            message: 'No se encontró configuración en la base de datos, usando valores por defecto',
+            severity: 'info'
+          })
         }
       } else {
-        // Si no hay API, usar configuración por defecto
-        console.log('Usando configuración por defecto')
+        console.error('Error en la respuesta de la API:', response.status, response.statusText)
+        setSnackbar({
+          open: true,
+          message: `Error al cargar configuración: ${response.status} ${response.statusText}`,
+          severity: 'error'
+        })
       }
     } catch (error) {
       console.error('Error loading config:', error)
       setSnackbar({
         open: true,
-        message: 'Error al cargar la configuración',
+        message: 'Error de conexión al cargar la configuración',
         severity: 'error'
       })
     } finally {
@@ -104,19 +139,23 @@ export default function AdminConfigPage() {
       })
       
       if (response.ok) {
+        const result = await response.json()
+        console.log('Configuración guardada exitosamente:', result)
         setSnackbar({
           open: true,
-          message: 'Configuración guardada correctamente',
+          message: 'Configuración guardada correctamente en la base de datos',
           severity: 'success'
         })
       } else {
-        throw new Error('Error al guardar')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error en la respuesta de guardado:', response.status, errorData)
+        throw new Error(`Error al guardar: ${response.status} ${response.statusText}`)
       }
     } catch (error) {
       console.error('Error saving config:', error)
       setSnackbar({
         open: true,
-        message: 'Error al guardar la configuración',
+        message: `Error al guardar la configuración: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         severity: 'error'
       })
     } finally {
@@ -151,19 +190,23 @@ export default function AdminConfigPage() {
         })
         
         if (response.ok) {
+          const result = await response.json()
+          console.log('Configuración restaurada exitosamente:', result)
           setSnackbar({
             open: true,
-            message: 'Configuración restaurada a valores por defecto',
+            message: 'Configuración restaurada a valores por defecto en la base de datos',
             severity: 'info'
           })
         } else {
-          throw new Error('Error al restaurar')
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Error al restaurar configuración:', response.status, errorData)
+          throw new Error(`Error al restaurar: ${response.status} ${response.statusText}`)
         }
       } catch (error) {
         console.error('Error resetting config:', error)
         setSnackbar({
           open: true,
-          message: 'Error al restaurar la configuración',
+          message: `Error al restaurar la configuración: ${error instanceof Error ? error.message : 'Error desconocido'}`,
           severity: 'error'
         })
       } finally {
@@ -175,7 +218,12 @@ export default function AdminConfigPage() {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Cargando configuración desde la base de datos...
+          </Typography>
+        </Box>
       </Box>
     )
   }
