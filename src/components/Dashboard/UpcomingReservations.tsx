@@ -37,18 +37,23 @@ interface Reservation {
 
 interface UpcomingReservationsProps {
   reservations: Reservation[]
+  currentUserId?: string
 }
 
-export default function UpcomingReservations({ reservations }: UpcomingReservationsProps) {
+export default function UpcomingReservations({ reservations, currentUserId }: UpcomingReservationsProps) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
   const upcomingReservations = reservations
     .filter(reservation => {
+      // Filtrar solo las reservas del usuario actual
+      const isMyReservation = currentUserId ? reservation.userId === currentUserId : true
+      
       const reservationDate = new Date(reservation.date)
       reservationDate.setHours(0, 0, 0, 0)
       const isUpcoming = reservationDate > today // Cambiado de >= a > para excluir hoy
-      return isUpcoming
+      
+      return isMyReservation && isUpcoming
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5)
@@ -75,14 +80,14 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
             color: '#1a1a1a'
           }}
         >
-          Próximas Reservas
+          Mis Próximas Reservas
         </Typography>
       </Box>
 
       {upcomingReservations.length === 0 ? (
         <Box textAlign="center" py={{ xs: '24px', sm: '32px' }}>
           <Typography color="text.secondary" sx={{ fontSize: { xs: '14px', sm: '16px' } }}>
-            No hay reservas próximas
+            No tienes reservas próximas
           </Typography>
         </Box>
       ) : (

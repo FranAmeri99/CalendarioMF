@@ -195,7 +195,10 @@ export default function Dashboard() {
       {/* Secciones principales */}
       <Grid container spacing={{ xs: 2, sm: 3, md: 3 }}>
         <Grid item xs={12} md={6}>
-          <UpcomingReservations reservations={reservations} />
+          <UpcomingReservations 
+            reservations={reservations} 
+            currentUserId={session.user?.id}
+          />
         </Grid>
         <Grid item xs={12} md={6}>
           <WeeklyOccupation reservations={reservations} maxSpots={stats.maxSpots} />
