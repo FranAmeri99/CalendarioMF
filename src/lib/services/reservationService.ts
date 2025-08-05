@@ -116,11 +116,6 @@ export class ReservationService {
   // Crear nueva reserva
   static async createReservation(data: CreateReservationData): Promise<ReservationWithUser> {
     try {
-      console.log('🔍 Creando reserva en servicio:')
-      console.log(`  - Fecha recibida: ${data.date}`)
-      console.log(`  - Usuario: ${data.userId}`)
-      console.log(`  - Equipo: ${data.teamId}`)
-      
       // Verificar si ya existe una reserva para el usuario en esa fecha
       const startOfDay = new Date(data.date)
       startOfDay.setHours(0, 0, 0, 0)
@@ -150,7 +145,6 @@ export class ReservationService {
         },
       })
       
-      console.log(`✅ Reserva creada exitosamente: ${reservation.id}`)
       return reservation
     } catch (error) {
       console.error('Error creating reservation:', error)
@@ -179,13 +173,9 @@ export class ReservationService {
   // Eliminar reserva
   static async deleteReservation(id: string): Promise<void> {
     try {
-      console.log(`🔄 Eliminando reserva con ID: ${id}`)
-      
       await prisma.reservation.delete({
         where: { id },
       })
-      
-      console.log(`✅ Reserva eliminada exitosamente: ${id}`)
     } catch (error) {
       console.error('Error deleting reservation:', error)
       throw new Error('Error al eliminar reserva')

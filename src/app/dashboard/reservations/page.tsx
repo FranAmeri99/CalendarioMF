@@ -91,21 +91,16 @@ export default function ReservationsPage() {
 
       if (roomsResponse.ok) {
         const rooms = await roomsResponse.json()
-        console.log('🏢 Salas recibidas:', rooms.length)
         setMeetingRooms(rooms)
       }
 
       if (bookingsResponse.ok) {
         const bookingsData = await bookingsResponse.json()
-        console.log('📅 Reservas de salas recibidas:', bookingsData.length)
-        console.log('📅 Detalles de reservas:', bookingsData)
         setBookings(bookingsData)
       }
 
       if (calendarResponse.ok) {
         const calendarData = await calendarResponse.json()
-        console.log('👥 Reservas de asistencia recibidas:', calendarData.reservations?.length || 0)
-        console.log('👥 Detalles de reservas de asistencia:', calendarData.reservations)
         setAttendanceReservations(calendarData.reservations || [])
         if (calendarData.config?.maxSpotsPerDay) {
           setMaxSpotsPerDay(calendarData.config.maxSpotsPerDay)
@@ -156,77 +151,89 @@ export default function ReservationsPage() {
     return days
   }
 
-  const getBookingsForDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
-    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
-    const year = argentinaDate.getUTCFullYear()
-    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
+  // Función para crear una fecha correctamente desde un string YYYY-MM-DD
+  const createDateFromString = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number)
+    // Crear fecha en zona horaria local para evitar problemas de UTC
+    return new Date(year, month - 1, day)
+  }
+
+  const getBookingsForDate = (date: Date, showLogs = false) => {
+    // Formatear la fecha seleccionada en formato YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
+    
+    if (showLogs) {
+      console.log('🔍 getBookingsForDate - Fecha seleccionada:', dateStr)
+      console.log('🔍 getBookingsForDate - Fecha objeto:', date)
+    }
     
     return bookings.filter(booking => {
       const bookingDate = new Date(booking.startTime)
-      const bookingArgentinaDate = new Date(bookingDate.getTime() + (3 * 60 * 60 * 1000))
-      const bookingYear = bookingArgentinaDate.getUTCFullYear()
-      const bookingMonth = String(bookingArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
-      const bookingDay = String(bookingArgentinaDate.getUTCDate()).padStart(2, '0')
-      const bookingDateStr = `${bookingYear}-${bookingMonth}-${bookingDay}`
+      // Usar toLocaleDateString para obtener la fecha en zona horaria local
+      const bookingDateStr = bookingDate.toLocaleDateString('en-CA') // Formato YYYY-MM-DD
+      
+      if (showLogs) {
+        console.log(`🔍 Booking: ${booking.title} - Original: ${booking.startTime} - Formateada: ${bookingDateStr} - Coincide: ${bookingDateStr === dateStr}`)
+      }
+      
       return bookingDateStr === dateStr
     })
   }
 
-  const getAttendanceReservationsForDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
-    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
-    const year = argentinaDate.getUTCFullYear()
-    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
+  const getAttendanceReservationsForDate = (date: Date, showLogs = false) => {
+    // Formatear la fecha seleccionada en formato YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
+    
+    if (showLogs) {
+      console.log('🔍 getAttendanceReservationsForDate - Fecha seleccionada:', dateStr)
+      console.log('🔍 getAttendanceReservationsForDate - Fecha objeto:', date)
+    }
     
     return attendanceReservations.filter(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationArgentinaDate = new Date(reservationDate.getTime() - (3 * 60 * 60 * 1000))
-      const reservationYear = reservationArgentinaDate.getUTCFullYear()
-      const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
-      const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
-      const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
+      // Usar toLocaleDateString para obtener la fecha en zona horaria local
+      const reservationDateStr = reservationDate.toLocaleDateString('en-CA') // Formato YYYY-MM-DD
+      
+      if (showLogs) {
+        console.log(`🔍 Reservation: ${reservation.user.name} - Original: ${reservation.date} - Formateada: ${reservationDateStr} - Coincide: ${reservationDateStr === dateStr}`)
+      }
+      
       return reservationDateStr === dateStr
     })
   }
 
   // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
   const hasUserReservationForDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
-    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
-    const year = argentinaDate.getUTCFullYear()
-    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
+    // Formatear la fecha seleccionada en formato YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
     return attendanceReservations.some(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationArgentinaDate = new Date(reservationDate.getTime() - (3 * 60 * 60 * 1000))
-      const reservationYear = reservationArgentinaDate.getUTCFullYear()
-      const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
-      const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
-      const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
+      // Usar toLocaleDateString para obtener la fecha en zona horaria local
+      const reservationDateStr = reservationDate.toLocaleDateString('en-CA') // Formato YYYY-MM-DD
       return reservationDateStr === dateStr
     })
   }
 
   const handleDateClick = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
-    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
-    
-    // Formatear la fecha correctamente
-    const year = argentinaDate.getUTCFullYear()
-    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
-    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
+    // Formatear la fecha en formato YYYY-MM-DD
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
-    console.log('Fecha original:', date)
-    console.log('Fecha Argentina (UTC-3):', argentinaDate)
-    console.log('Fecha seleccionada (formato):', dateStr)
+    console.log('🔍 handleDateClick - Fecha seleccionada:', dateStr)
+    console.log('🔍 handleDateClick - Fecha objeto:', date)
+    console.log('🔍 handleDateClick - Fecha formateada:', date.toLocaleDateString('en-CA'))
     
     setSelectedDate(dateStr)
     setShowDetailsDialog(true)
@@ -350,12 +357,14 @@ export default function ReservationsPage() {
   }
 
   const formatDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
-    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
-    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
-    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
-    const year = argentinaDate.getUTCFullYear()
-    return `${day}/${month}/${year}`
+    // Usar directamente la fecha sin ajustes de zona horaria
+    const result = date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    
+    return result
   }
 
   const formatTime = (dateTime: string) => {
@@ -582,17 +591,17 @@ export default function ReservationsPage() {
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Detalles del {selectedDate && formatDate(new Date(selectedDate))}</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Detalles del {selectedDate && formatDate(createDateFromString(selectedDate))}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 sm:space-y-6">
             {/* Reservas de salas */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Reservas de Salas</h3>
-              {selectedDate && getBookingsForDate(new Date(selectedDate)).length === 0 ? (
+              {selectedDate && getBookingsForDate(createDateFromString(selectedDate), true).length === 0 ? (
                 <p className="text-muted-foreground text-sm">No hay reservas de salas para este día</p>
               ) : (
                 <div className="space-y-2">
-                  {selectedDate && getBookingsForDate(new Date(selectedDate)).map((booking) => (
+                  {selectedDate && getBookingsForDate(createDateFromString(selectedDate), true).map((booking) => (
                     <div
                       key={booking.id}
                       className="p-2 sm:p-3 rounded-lg border"
@@ -633,26 +642,26 @@ export default function ReservationsPage() {
             {/* Reservas de asistencia */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Asistencia</h3>
-              {selectedDate && getAttendanceReservationsForDate(new Date(selectedDate)).length === 0 ? (
+              {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length === 0 ? (
                 <p className="text-muted-foreground text-sm">No hay reservas de asistencia para este día</p>
               ) : (
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-xs sm:text-sm font-medium">Ocupación</span>
                     <span className="text-xs sm:text-sm">
-                      {selectedDate && getAttendanceReservationsForDate(new Date(selectedDate)).length}/{maxSpotsPerDay}
+                      {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length}/{maxSpotsPerDay}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                     <div
                       className="bg-green-500 h-2 sm:h-3 rounded-full transition-all duration-300"
                       style={{
-                        width: `${Math.min((selectedDate && getAttendanceReservationsForDate(new Date(selectedDate)).length || 0) / maxSpotsPerDay * 100, 100)}%`
+                        width: `${Math.min((selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length || 0) / maxSpotsPerDay * 100, 100)}%`
                       }}
                     />
                   </div>
                   <div className="space-y-1 sm:space-y-2">
-                    {selectedDate && getAttendanceReservationsForDate(new Date(selectedDate)).map((reservation) => (
+                    {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).map((reservation) => (
                       <div key={reservation.id} className="flex justify-between items-center p-2 bg-green-50 rounded">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-xs sm:text-sm">{reservation.user.name}</p>
@@ -692,18 +701,18 @@ export default function ReservationsPage() {
                 setShowDetailsDialog(false)
                 setShowAttendanceDialog(true)
               }}
-              disabled={selectedDate ? hasUserReservationForDate(new Date(selectedDate)) : false}
+              disabled={selectedDate ? hasUserReservationForDate(createDateFromString(selectedDate)) : false}
               className="w-full sm:w-auto"
             >
               <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               <span className="hidden sm:inline">
-                {selectedDate && hasUserReservationForDate(new Date(selectedDate)) 
+                {selectedDate && hasUserReservationForDate(createDateFromString(selectedDate)) 
                   ? 'Ya tienes reserva' 
                   : 'Registrar Asistencia'
                 }
               </span>
               <span className="sm:hidden">
-                {selectedDate && hasUserReservationForDate(new Date(selectedDate)) 
+                {selectedDate && hasUserReservationForDate(createDateFromString(selectedDate)) 
                   ? 'Reservado' 
                   : 'Asistencia'
                 }
@@ -856,7 +865,7 @@ export default function ReservationsPage() {
 
               <div className="bg-blue-50 p-3 sm:p-4 rounded-md">
                 <p className="text-sm sm:text-base text-blue-700">
-                  <strong>Información:</strong> Se registrará tu asistencia para el día {selectedDate && formatDate(new Date(selectedDate))}.
+                  <strong>Información:</strong> Se registrará tu asistencia para el día {selectedDate && formatDate(createDateFromString(selectedDate))}.
                   {session?.user?.teamId && (
                     <span className="block mt-2">Tu equipo se asignará automáticamente.</span>
                   )}

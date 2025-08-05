@@ -80,10 +80,7 @@ export default function CalendarPage() {
       
       // Actualizar maxSpots con la configuración
       if (data.config?.maxSpotsPerDay) {
-        console.log('🔧 Calendar - Setting maxSpots to:', data.config.maxSpotsPerDay)
         setMaxSpots(data.config.maxSpotsPerDay)
-      } else {
-        console.log('🔧 Calendar - No maxSpotsPerDay found in config')
       }
     } catch (error) {
       console.error('Error fetching data:', error)

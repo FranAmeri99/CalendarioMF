@@ -43,31 +43,15 @@ export default function UpcomingReservations({ reservations }: UpcomingReservati
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  console.log('🔍 Debug UpcomingReservations:')
-  console.log('Total reservations received:', reservations.length)
-  console.log('Today:', today.toISOString())
-  
-  reservations.forEach((r, i) => {
-    console.log(`Reservation ${i + 1}:`, {
-      id: r.id,
-      date: r.date,
-      user: r.user.name,
-      isUpcoming: new Date(r.date) >= today
-    })
-  })
-
   const upcomingReservations = reservations
     .filter(reservation => {
       const reservationDate = new Date(reservation.date)
       reservationDate.setHours(0, 0, 0, 0)
       const isUpcoming = reservationDate > today // Cambiado de >= a > para excluir hoy
-      console.log(`Filtering ${reservation.user.name} on ${reservation.date}: ${isUpcoming}`)
       return isUpcoming
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 5)
-
-  console.log('Upcoming reservations after filter:', upcomingReservations.length)
 
   return (
     <Paper

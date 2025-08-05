@@ -47,19 +47,6 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
 
   const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).tz('America/Argentina/Buenos_Aires').add(i, 'day'))
 
-  // Debug: mostrar todas las reservas
-  console.log('🔍 WeeklyOccupation - Todas las reservas:')
-  reservations.forEach((reservation, index) => {
-    const reservationDate = dayjs.utc(reservation.date).tz('America/Argentina/Buenos_Aires')
-    console.log(`  ${index + 1}. ${reservation.user.name} - ${reservationDate.format('YYYY-MM-DD HH:mm:ss')} (${reservation.date})`)
-  })
-
-  // Debug: mostrar los días de la semana generados
-  console.log('🔍 WeeklyOccupation - Días de la semana:')
-  weekDays.forEach((day, index) => {
-    console.log(`  ${index + 1}. ${day.format('dddd')} - ${day.format('YYYY-MM-DD HH:mm:ss')}`)
-  })
-
   const getReservationsForDay = (date: dayjs.Dayjs) => {
     const dayReservations = reservations.filter(reservation => {
       // Convertir la fecha de la reserva a UTC primero, luego a zona horaria de Argentina
@@ -67,19 +54,9 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
       const compareDate = date.tz('America/Argentina/Buenos_Aires').startOf('day')
       const isSame = compareDate.isSame(reservationDate, 'day')
       
-      // Debug log para el miércoles
-      if (date.format('dddd') === 'miércoles') {
-        console.log(`🔍 Miércoles debug: ${date.format('YYYY-MM-DD')} vs ${reservationDate.format('YYYY-MM-DD')} = ${isSame}`)
-        console.log(`  - Compare date: ${compareDate.format('YYYY-MM-DD HH:mm:ss')}`)
-        console.log(`  - Reservation date: ${reservationDate.format('YYYY-MM-DD HH:mm:ss')}`)
-        console.log(`  - Reservation original: ${reservation.date}`)
-        console.log(`  - Reservation UTC: ${dayjs.utc(reservation.date).format('YYYY-MM-DD HH:mm:ss')}`)
-      }
-      
       return isSame
     })
     
-    console.log(`📅 ${date.format('dddd')} (${date.format('YYYY-MM-DD')}): ${dayReservations.length} reservas`)
     return dayReservations.length
   }
 

@@ -94,18 +94,12 @@ export function ModernCalendarView({
   };
 
   const getDayReservations = (dateStr: string) => {
-    console.log('🔍 Calendario - Filtrando reservas para fecha:', dateStr);
-    console.log('  - Todas las reservas:', reservations.map(r => ({ id: r.id, date: r.date, datePart: r.date.split('T')[0] })));
-    
     // Convertir la fecha de la reserva a zona horaria local para comparar correctamente
     const filtered = reservations.filter((r) => {
       const reservationDate = new Date(r.date);
       const reservationDateStr = reservationDate.toLocaleDateString('en-CA'); // YYYY-MM-DD en zona horaria local
-      console.log(`  - Comparando: reserva ${r.date} -> ${reservationDateStr} vs fecha buscada ${dateStr}`);
       return reservationDateStr === dateStr;
     });
-    
-    console.log('  - Reservas filtradas:', filtered.map(r => ({ id: r.id, date: r.date })));
     
     return filtered;
   };
@@ -120,10 +114,6 @@ export function ModernCalendarView({
 
   const handleReservation = async (date: string) => {
     if (!currentUser || !onCreateReservation) return;
-    
-    console.log('🔍 Calendario - Creando reserva:')
-    console.log(`  - Fecha seleccionada: ${date}`)
-    console.log(`  - Usuario: ${currentUser.id}`)
     
     try {
       await onCreateReservation(date);
