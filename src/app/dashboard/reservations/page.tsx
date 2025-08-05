@@ -160,6 +160,16 @@ export default function ReservationsPage() {
     })
   }
 
+  // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
+  const hasUserReservationForDate = (date: Date) => {
+    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD
+    return attendanceReservations.some(reservation => {
+      const reservationDate = new Date(reservation.date)
+      const reservationDateStr = reservationDate.toLocaleDateString('en-CA')
+      return reservationDateStr === dateStr && reservation.userId === session?.user?.id
+    })
+  }
+
   const handleDateClick = (date: Date) => {
     const dateStr = date.toLocaleDateString('en-CA')
     setSelectedDate(dateStr)
@@ -607,11 +617,22 @@ export default function ReservationsPage() {
                 setShowDetailsDialog(false)
                 setShowAttendanceDialog(true)
               }}
+              disabled={selectedDate ? hasUserReservationForDate(new Date(selectedDate)) : false}
               className="w-full sm:w-auto"
             >
               <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-              <span className="hidden sm:inline">Registrar Asistencia</span>
-              <span className="sm:hidden">Asistencia</span>
+              <span className="hidden sm:inline">
+                {selectedDate && hasUserReservationForDate(new Date(selectedDate)) 
+                  ? 'Ya tienes reserva' 
+                  : 'Registrar Asistencia'
+                }
+              </span>
+              <span className="sm:hidden">
+                {selectedDate && hasUserReservationForDate(new Date(selectedDate)) 
+                  ? 'Reservado' 
+                  : 'Asistencia'
+                }
+              </span>
             </Button>
             <Button
               onClick={() => {
