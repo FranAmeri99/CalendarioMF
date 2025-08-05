@@ -560,11 +560,7 @@ export default function ReservationsPage() {
                            {dayBookings.length}
                          </Badge>
                        )}
-                       {dayAttendanceReservations.length > 0 && (
-                         <Badge variant="outline" className="text-xs px-1 py-0.5">
-                           {dayAttendanceReservations.length}/{maxSpotsPerDay}
-                         </Badge>
-                       )}
+                       
                      </div>
                    </div>
 
