@@ -152,34 +152,38 @@ export default function ReservationsPage() {
   }
 
   const getBookingsForDate = (date: Date) => {
-    // Usar el mismo formato que handleDateClick
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
+    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    const year = argentinaDate.getUTCFullYear()
+    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
     return bookings.filter(booking => {
       const bookingDate = new Date(booking.startTime)
-      const bookingYear = bookingDate.getFullYear()
-      const bookingMonth = String(bookingDate.getMonth() + 1).padStart(2, '0')
-      const bookingDay = String(bookingDate.getDate()).padStart(2, '0')
+      const bookingArgentinaDate = new Date(bookingDate.getTime() + (3 * 60 * 60 * 1000))
+      const bookingYear = bookingArgentinaDate.getUTCFullYear()
+      const bookingMonth = String(bookingArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
+      const bookingDay = String(bookingArgentinaDate.getUTCDate()).padStart(2, '0')
       const bookingDateStr = `${bookingYear}-${bookingMonth}-${bookingDay}`
       return bookingDateStr === dateStr
     })
   }
 
   const getAttendanceReservationsForDate = (date: Date) => {
-    // Usar el mismo formato que handleDateClick
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
+    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    const year = argentinaDate.getUTCFullYear()
+    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
     return attendanceReservations.filter(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationYear = reservationDate.getFullYear()
-      const reservationMonth = String(reservationDate.getMonth() + 1).padStart(2, '0')
-      const reservationDay = String(reservationDate.getDate()).padStart(2, '0')
+      const reservationArgentinaDate = new Date(reservationDate.getTime() + (3 * 60 * 60 * 1000))
+      const reservationYear = reservationArgentinaDate.getUTCFullYear()
+      const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
+      const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
       const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
       return reservationDateStr === dateStr
     })
@@ -187,30 +191,38 @@ export default function ReservationsPage() {
 
   // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
   const hasUserReservationForDate = (date: Date) => {
-    // Usar el mismo formato que handleDateClick
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
+    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    const year = argentinaDate.getUTCFullYear()
+    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
     return attendanceReservations.some(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationYear = reservationDate.getFullYear()
-      const reservationMonth = String(reservationDate.getMonth() + 1).padStart(2, '0')
-      const reservationDay = String(reservationDate.getDate()).padStart(2, '0')
+      const reservationArgentinaDate = new Date(reservationDate.getTime() + (3 * 60 * 60 * 1000))
+      const reservationYear = reservationArgentinaDate.getUTCFullYear()
+      const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
+      const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
       const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
-      return reservationDateStr === dateStr && reservation.userId === session?.user?.id
+      return reservationDateStr === dateStr
     })
   }
 
   const handleDateClick = (date: Date) => {
-    // Asegurar que se use la fecha correcta sin problemas de zona horaria
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
+    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
+    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    
+    // Formatear la fecha correctamente
+    const year = argentinaDate.getUTCFullYear()
+    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
     
-    console.log('Fecha seleccionada:', dateStr)
+    console.log('Fecha original:', date)
+    console.log('Fecha Argentina (UTC-3):', argentinaDate)
+    console.log('Fecha seleccionada (formato):', dateStr)
+    
     setSelectedDate(dateStr)
     setShowDetailsDialog(true)
   }
@@ -333,11 +345,12 @@ export default function ReservationsPage() {
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
+    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
+    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
+    const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
+    const year = argentinaDate.getUTCFullYear()
+    return `${day}/${month}/${year}`
   }
 
   const formatTime = (dateTime: string) => {
