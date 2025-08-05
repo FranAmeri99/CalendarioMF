@@ -156,6 +156,44 @@ export default function ReservationsPage() {
     return days
   }
 
+  // Función para validar y formatear fecha automáticamente
+  const formatDateInput = (value: string) => {
+    // Remover todo excepto números
+    const numbers = value.replace(/\D/g, '')
+    
+    // Limitar a 8 dígitos (ddmmyyyy)
+    if (numbers.length > 8) return value
+    
+    // Formatear automáticamente
+    if (numbers.length >= 4) {
+      const day = numbers.slice(0, 2)
+      const month = numbers.slice(2, 4)
+      const year = numbers.slice(4, 8)
+      
+      if (numbers.length >= 6) {
+        return `${day}/${month}/${year}`
+      } else if (numbers.length >= 4) {
+        return `${day}/${month}`
+      } else {
+        return day
+      }
+    }
+    
+    return numbers
+  }
+
+  // Función para validar fecha
+  const validateDate = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/').map(Number)
+    
+    if (!day || !month || !year) return false
+    
+    const date = new Date(year, month - 1, day)
+    return date.getDate() === day && 
+           date.getMonth() === month - 1 && 
+           date.getFullYear() === year
+  }
+
   // Función para formatear fecha en formato dd/mm/yyyy
   const formatDateForDisplay = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0')
@@ -845,12 +883,26 @@ export default function ReservationsPage() {
                       type="text"
                       required
                       defaultValue={selectedDate ? formatDateForDisplay(createDateFromString(selectedDate)) : ''}
+                      onChange={(e) => {
+                        const formatted = formatDateInput(e.target.value)
+                        e.target.value = formatted
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value && !validateDate(e.target.value)) {
+                          e.target.style.borderColor = '#ef4444'
+                          e.target.style.color = '#ef4444'
+                        } else {
+                          e.target.style.borderColor = ''
+                          e.target.style.color = ''
+                        }
+                      }}
                       className="flex-1 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       style={{ 
                         'font-family': 'monospace',
                         'text-align': 'center'
                       } as React.CSSProperties}
                       placeholder="dd/mm/yyyy"
+                      maxLength={10}
                     />
                     <input
                       id="startTime"
@@ -877,12 +929,26 @@ export default function ReservationsPage() {
                       type="text"
                       required
                       defaultValue={selectedDate ? formatDateForDisplay(createDateFromString(selectedDate)) : ''}
+                      onChange={(e) => {
+                        const formatted = formatDateInput(e.target.value)
+                        e.target.value = formatted
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value && !validateDate(e.target.value)) {
+                          e.target.style.borderColor = '#ef4444'
+                          e.target.style.color = '#ef4444'
+                        } else {
+                          e.target.style.borderColor = ''
+                          e.target.style.color = ''
+                        }
+                      }}
                       className="flex-1 h-10 sm:h-12 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       style={{ 
                         'font-family': 'monospace',
                         'text-align': 'center'
                       } as React.CSSProperties}
                       placeholder="dd/mm/yyyy"
+                      maxLength={10}
                     />
                     <input
                       id="endTime"
