@@ -1,43 +1,46 @@
-# Sistema de Gestión de Asistencia Física a la Oficina
+# Sistema de Gestión de Asistencia y Reservas
 
-Una aplicación web completa para gestionar la asistencia de colaboradores a la oficina, con un sistema de reserva de lugares limitados (12 lugares por día) y gestión de equipos.
+Una aplicación web completa para gestionar la asistencia de colaboradores a la oficina y reservas de salas de reuniones, con un sistema unificado de calendario y gestión de equipos.
 
 ## 🚀 Características
 
 ### Funciones Principales
 
 - **Dashboard Interactivo**: Vista general con estadísticas y calendario semanal
-- **Gestión de Reservas**: Crear, editar y cancelar reservas de lugares en la oficina
+- **Sistema Unificado de Reservas**: Gestión de asistencia y salas de reuniones en un solo lugar
+- **Calendario Integrado**: Vista mensual con reservas de asistencia y salas de reuniones
+- **Gestión de Salas de Reuniones**: Crear, editar y eliminar salas de reuniones
 - **ABM de Personas**: Alta, baja y modificación de colaboradores
 - **Gestión de Equipos**: Crear y administrar equipos de trabajo
 - **Perfil de Usuario**: Información personal e historial de reservas
 - **Sistema de Autenticación**: Login seguro con NextAuth
-- **Interfaz Responsiva**: Diseño adaptativo para móvil y escritorio
+- **Interfaz Mobile-First**: Diseño completamente responsive optimizado para móviles
 
 ### Tecnologías Utilizadas
 
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **UI Framework**: Material-UI (MUI) con Material Design
-- **Base de Datos**: SQLite con Prisma ORM
+- **Base de Datos**: PostgreSQL con Prisma ORM (Supabase)
 - **Autenticación**: NextAuth.js
 - **Estilos**: Tailwind CSS
-- **Validación**: Zod + React Hook Form
-- **Notificaciones**: React Hot Toast
+- **Notificaciones**: Sonner Toast
+- **Iconos**: Lucide React
 
 ## 📋 Requisitos Previos
 
 - Node.js 18+ 
 - npm o yarn
 - Git
+- Cuenta de Supabase (recomendado)
 
 ## 🛠️ Instalación
 
-### Opción 1: Con Supabase (Recomendado)
+### Configuración con Supabase (Recomendado)
 
 1. **Clonar el repositorio**
    ```bash
-   git clone <url-del-repositorio>
-   cd asistencia-app
+   git clone https://github.com/FranAmeri99/CalendarioMF.git
+   cd asistencia
    ```
 
 2. **Instalar dependencias**
@@ -48,58 +51,34 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 3. **Configurar Supabase**
    - Sigue la guía completa en `SUPABASE_SETUP.md`
    - Crea un proyecto en [supabase.com](https://supabase.com)
-   - Obtén la URL de conexión
+   - Obtén la URL de conexión y anon key
 
 4. **Configurar variables de entorno**
    ```bash
-   # Actualizar .env con tu URL de Supabase
+   # Copiar archivo de ejemplo
+   cp env.example .env.local
+   
+   # Configurar variables en .env.local
    DATABASE_URL="postgresql://postgres:tu-password@db.tu-project.supabase.co:5432/postgres"
    NEXTAUTH_SECRET="tu-secreto-super-seguro-aqui"
    NEXTAUTH_URL="http://localhost:3000"
+   NEXT_PUBLIC_SUPABASE_URL="https://tu-project.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="tu-anon-key"
    ```
 
 5. **Configurar la base de datos**
    ```bash
    # Generar el cliente de Prisma
-   npm run db:generate
+   npx prisma generate
    
    # Crear las tablas en Supabase
-   npm run db:push
+   npx prisma db push
    
    # Insertar datos de prueba
-   npm run db:seed
+   node src/scripts/seed-users.js
    ```
 
 6. **Ejecutar la aplicación**
-   ```bash
-   npm run dev
-   ```
-
-### Opción 2: Con SQLite (Desarrollo local)
-
-1. **Clonar el repositorio**
-   ```bash
-   git clone <url-del-repositorio>
-   cd asistencia-app
-   ```
-
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-
-3. **Configurar SQLite**
-   - Cambia el proveedor en `prisma/schema.prisma` a `sqlite`
-   - Actualiza `DATABASE_URL` en `.env` a `file:./dev.db`
-
-4. **Configurar la base de datos**
-   ```bash
-   npm run db:generate
-   npm run db:push
-   npm run db:seed
-   ```
-
-5. **Ejecutar la aplicación**
    ```bash
    npm run dev
    ```
@@ -110,47 +89,46 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 
 - **User**: Usuarios del sistema con roles y equipos
 - **Team**: Equipos de trabajo con líderes y miembros
-- **Reservation**: Reservas de lugares en la oficina
+- **Reservation**: Reservas de asistencia a la oficina
+- **MeetingRoom**: Salas de reuniones disponibles
+- **MeetingRoomBooking**: Reservas de salas de reuniones
+- **SystemConfig**: Configuración del sistema (límites, etc.)
 
 ### Relaciones
 
 - Un usuario puede pertenecer a un equipo
-- Un equipo puede tener múltiples miembros
-- Un equipo puede tener un líder
-- Las reservas están asociadas a usuarios y equipos
-
-## 🔧 Scripts Disponibles
-
-```bash
-# Desarrollo
-npm run dev          # Iniciar servidor de desarrollo
-npm run build        # Construir para producción
-npm run start        # Iniciar servidor de producción
-npm run lint         # Ejecutar linter
-
-# Base de datos
-npm run db:generate  # Generar cliente de Prisma
-npm run db:push      # Sincronizar esquema con la base de datos
-npm run db:migrate   # Ejecutar migraciones
-npm run db:studio    # Abrir Prisma Studio
-npm run db:seed      # Insertar datos de prueba
-npm run test:supabase # Probar conexión a Supabase
-```
+- Un equipo puede tener múltiples miembros y un líder
+- Las reservas de asistencia están asociadas a usuarios y equipos
+- Las reservas de salas están asociadas a usuarios y salas específicas
 
 ## 📱 Funcionalidades por Sección
 
 ### 🏠 Dashboard
 - Vista de calendario semanal/mensual
-- Estadísticas de ocupación
-- Alertas cuando la oficina está completa
-- Reservas recientes
+- Estadísticas de ocupación de asistencia
+- Reservas próximas de asistencia y salas
+- Métricas de ocupación semanal
+- Diseño completamente responsive
 
-### 📅 Gestión de Reservas
-- Crear nuevas reservas
-- Editar reservas existentes
-- Cancelar reservas
-- Filtros por fecha y equipo
-- Validación de disponibilidad
+### 📅 Gestión de Reservas (Unificado)
+- **Calendario Integrado**: Vista mensual con ambos tipos de reservas
+- **Reservas de Asistencia**: 
+  - Registro de asistencia diaria
+  - Límite configurable de lugares (12 por defecto)
+  - Asignación automática de equipo
+  - Eliminación de reservas propias
+- **Reservas de Salas de Reuniones**:
+  - Crear reservas con título, descripción y horarios
+  - Selección de sala específica
+  - Validación de conflictos de horarios
+  - Eliminación de reservas propias
+
+### 🏢 Gestión de Salas de Reuniones
+- Crear nuevas salas de reuniones
+- Editar información de salas
+- Activar/desactivar salas
+- Ver capacidad y descripción
+- Gestión completa desde panel de administración
 
 ### 👥 ABM de Personas
 - Lista de colaboradores con búsqueda
@@ -158,6 +136,7 @@ npm run test:supabase # Probar conexión a Supabase
 - Editar información de usuarios
 - Asignar roles (ADMIN, MANAGER, USER)
 - Asignar usuarios a equipos
+- Cambio de contraseñas
 
 ### 👨‍👩‍👧‍👦 Gestión de Equipos
 - Crear nuevos equipos
@@ -167,11 +146,11 @@ npm run test:supabase # Probar conexión a Supabase
 - Estadísticas de reservas por equipo
 
 ### 👤 Perfil de Usuario
-- Información personal
-- Historial de reservas
+- Información personal editable
+- Historial de reservas de asistencia
 - Estadísticas de asistencia
 - Opción para cambiar equipo
-- Edición de datos personales
+- Edición de datos personales y contraseña
 
 ## 🔐 Sistema de Autenticación
 
@@ -186,71 +165,97 @@ npm run test:supabase # Probar conexión a Supabase
 | Función | ADMIN | MANAGER | USER |
 |---------|-------|---------|------|
 | Ver Dashboard | ✅ | ✅ | ✅ |
-| Crear Reservas | ✅ | ✅ | ✅ |
+| Crear Reservas de Asistencia | ✅ | ✅ | ✅ |
+| Crear Reservas de Salas | ✅ | ✅ | ✅ |
 | Gestionar Usuarios | ✅ | ❌ | ❌ |
 | Gestionar Equipos | ✅ | ✅ | ❌ |
+| Gestionar Salas de Reuniones | ✅ | ✅ | ❌ |
 | Ver Todas las Reservas | ✅ | ✅ | ❌ |
 
 ## 🎨 Diseño y UX
 
-### Material Design
-- Componentes MUI para consistencia visual
+### Material Design Mobile-First
+- Componentes MUI optimizados para móviles
 - Paleta de colores personalizada
-- Iconografía coherente
-- Tipografía optimizada
+- Iconografía coherente con Lucide React
+- Tipografía responsive
+- Modales optimizados con ancho aumentado
 
-### Responsividad
-- Diseño mobile-first
-- Adaptación automática a diferentes pantallas
-- Navegación optimizada para móviles
+### Responsividad Avanzada
+- **Diseño mobile-first** completamente implementado
+- **Modales optimizados**: Ancho aumentado de 425px a 600px/500px
+- **Campos touch-friendly**: Altura aumentada para mejor interacción
+- **Espaciado adaptativo**: Gaps y padding optimizados por breakpoint
+- **Navegación móvil**: Drawer optimizado para pantallas pequeñas
+- **Botones responsive**: Full-width en móviles, auto en desktop
+
+### Optimizaciones Mobile
+- **AppBar responsive**: Título simplificado en móviles
+- **Drawer optimizado**: Ancho adaptativo y mejor espaciado
+- **Tablas responsive**: Columnas ocultas en pantallas pequeñas
+- **Grid adaptativo**: Layouts que se ajustan automáticamente
+- **Tipografía escalable**: Tamaños de fuente optimizados
 
 ## 🚀 Scripts Disponibles
 
 ```bash
 # Desarrollo
-npm run dev
-
-# Construcción
-npm run build
-
-# Producción
-npm run start
-
-# Linting
-npm run lint
+npm run dev          # Iniciar servidor de desarrollo
+npm run build        # Construir para producción
+npm run start        # Iniciar servidor de producción
+npm run lint         # Ejecutar linter
 
 # Base de datos
-npm run db:generate    # Generar cliente Prisma
-npm run db:push        # Sincronizar esquema
-npm run db:migrate     # Ejecutar migraciones
-npm run db:studio      # Abrir Prisma Studio
+npx prisma generate  # Generar cliente de Prisma
+npx prisma db push   # Sincronizar esquema con la base de datos
+npx prisma studio    # Abrir Prisma Studio
+node src/scripts/seed-users.js # Insertar datos de prueba
+
+# Utilidades
+npm run test:supabase # Probar conexión a Supabase
 ```
 
-## 📊 Configuración de la Oficina
+## 📊 Configuración del Sistema
 
 ### Límites de Capacidad
-- **12 lugares disponibles por día**
-- **Sistema de alertas cuando está completo**
-- **Validación automática de disponibilidad**
+- **12 lugares disponibles por día** para asistencia
+- **Sistema de alertas** cuando está completo
+- **Validación automática** de disponibilidad
+- **Configuración dinámica** desde base de datos
+
+### Salas de Reuniones
+- **Capacidad configurable** por sala
+- **Estado activo/inactivo**
+- **Descripción detallada**
+- **Validación de conflictos** de horarios
 
 ### Horarios
-- Lunes a Viernes
-- 9:00 AM - 6:00 PM
-- Reservas por día completo
+- **Asistencia**: Lunes a Viernes, día completo
+- **Salas de Reuniones**: Horarios flexibles configurables
+- **Validación de fechas** futuras
 
 ## 🔧 Personalización
 
 ### Variables de Entorno
 ```env
-DATABASE_URL="file:./dev.db"
+# Base de datos
+DATABASE_URL="postgresql://postgres:password@db.project.supabase.co:5432/postgres"
+
+# NextAuth
 NEXTAUTH_SECRET="tu-secreto"
 NEXTAUTH_URL="http://localhost:3000"
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL="https://project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="tu-anon-key"
+SUPABASE_DB_PASSWORD="tu-password"
 ```
 
 ### Configuración de Prisma
-- Base de datos: SQLite (desarrollo) / PostgreSQL (producción)
-- Migraciones automáticas
+- Base de datos: PostgreSQL (Supabase)
+- Migraciones automáticas con `db push`
 - Generación de tipos TypeScript
+- Relaciones optimizadas
 
 ## 🐛 Solución de Problemas
 
@@ -258,8 +263,8 @@ NEXTAUTH_URL="http://localhost:3000"
 
 1. **Error de base de datos**
    ```bash
-   npm run db:generate
-   npm run db:push
+   npx prisma generate
+   npx prisma db push
    ```
 
 2. **Error de autenticación**
@@ -272,21 +277,39 @@ NEXTAUTH_URL="http://localhost:3000"
    npm install
    ```
 
-## 📈 Próximas Mejoras
+4. **Problemas de responsive**
+   - Verificar breakpoints en componentes
+   - Revisar clases de Tailwind
 
+## 📈 Mejoras Implementadas
+
+### ✅ Completadas
+- [x] Sistema unificado de calendario
+- [x] Gestión de salas de reuniones
+- [x] Diseño mobile-first completo
+- [x] Modales optimizados y responsive
+- [x] Eliminación de reservas propias
+- [x] Asignación automática de equipos
+- [x] Interfaz completamente responsive
+- [x] Optimización de UX móvil
+- [x] Consolidación de funcionalidades
+
+### 🚧 Próximas Mejoras
 - [ ] Notificaciones push
 - [ ] Reportes avanzados
-- [ ] Integración con calendarios
+- [ ] Integración con calendarios externos
 - [ ] API REST completa
 - [ ] Tests automatizados
 - [ ] Docker deployment
+- [ ] Exportación de datos
+- [ ] Dashboard analítico
 
 ## 🤝 Contribución
 
 1. Fork el proyecto
-2. Crear una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir un Pull Request
 
 ## 📄 Licencia
@@ -299,4 +322,13 @@ Para soporte técnico o preguntas, contactar al equipo de desarrollo.
 
 ---
 
-**Desarrollado con ❤️ usando Next.js, Material-UI y Prisma** 
+**Desarrollado con ❤️ usando Next.js, Material-UI, Prisma y Supabase**
+
+### 🎯 Características Destacadas
+
+- **Sistema Unificado**: Asistencia y salas de reuniones en un solo lugar
+- **Mobile-First**: Optimizado completamente para dispositivos móviles
+- **UX Mejorada**: Modales más anchos y campos touch-friendly
+- **Responsive Design**: Adaptación perfecta a todas las pantallas
+- **Gestión Completa**: Usuarios, equipos, salas y reservas
+- **Autenticación Segura**: NextAuth con roles y permisos 
