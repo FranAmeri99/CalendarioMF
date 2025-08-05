@@ -91,12 +91,16 @@ export default function Navigation() {
           
           {/* Logo */}
           <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-            <Box sx={{ 
-              display: { xs: 'none', sm: 'block' },
-              height: { xs: 32, sm: 36, md: 40 },
-              width: 'auto',
-              maxWidth: { sm: 160, md: 180 }
-            }}>
+            <Box 
+              sx={{ 
+                display: { xs: 'none', sm: 'block' },
+                height: { xs: 32, sm: 36, md: 40 },
+                width: 'auto',
+                maxWidth: { sm: 160, md: 180 },
+                cursor: 'pointer'
+              }}
+              onClick={() => handleNavigation('/dashboard')}
+            >
               <Image
                 src="/logo.svg"
                 alt="Logo Sistema de Asistencia"
@@ -112,12 +116,16 @@ export default function Navigation() {
             </Box>
             
             {/* Logo móvil más pequeño */}
-            <Box sx={{ 
-              display: { xs: 'block', sm: 'none' },
-              height: 28,
-              width: 'auto',
-              maxWidth: 120
-            }}>
+            <Box 
+              sx={{ 
+                display: { xs: 'block', sm: 'none' },
+                height: 28,
+                width: 'auto',
+                maxWidth: 120,
+                cursor: 'pointer'
+              }}
+              onClick={() => handleNavigation('/dashboard')}
+            >
               <Image
                 src="/logo.svg"
                 alt="Logo Sistema de Asistencia"
