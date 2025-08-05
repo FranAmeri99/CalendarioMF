@@ -950,9 +950,7 @@ export default function ReservationsPage() {
               <div className="bg-blue-50 p-3 sm:p-4 rounded-md">
                 <p className="text-sm sm:text-base text-blue-700">
                   <strong>Información:</strong> Se registrará tu asistencia para el día {selectedDate && formatDate(createDateFromString(selectedDate))}.
-                  {session?.user?.teamId && (
-                    <span className="block mt-2">Tu equipo se asignará automáticamente.</span>
-                  )}
+                  
                 </p>
               </div>
             </div>

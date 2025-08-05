@@ -47,6 +47,25 @@ interface Reservation {
   }
 }
 
+interface Booking {
+  id: string
+  title: string
+  description?: string
+  startTime: string
+  endTime: string
+  userId: string
+  meetingRoomId: string
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+  meetingRoom: {
+    id: string
+    name: string
+  }
+}
+
 interface Team {
   id: string
   name: string
@@ -67,6 +86,7 @@ export default function Dashboard() {
     weeklyAverage: 0,
   })
   const [reservations, setReservations] = useState<Reservation[]>([])
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [teams, setTeams] = useState<Team[]>([])
 
   useEffect(() => {
@@ -84,21 +104,32 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/dashboard/stats')
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // Cargar datos de stats y bookings en paralelo
+      const [statsResponse, bookingsResponse] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/meeting-room-bookings')
+      ])
+      
+      if (!statsResponse.ok) {
+        throw new Error(`HTTP error! status: ${statsResponse.status}`)
       }
       
-      const data = await response.json()
+      const statsData = await statsResponse.json()
       
-      if (data.error) {
-        throw new Error(data.error)
+      if (statsData.error) {
+        throw new Error(statsData.error)
       }
 
-      setStats(data.stats)
-      setReservations(data.reservations)
-      setTeams(data.teams)
+      setStats(statsData.stats)
+      setReservations(statsData.reservations)
+      setTeams(statsData.teams)
+
+      // Cargar bookings
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json()
+        setBookings(bookingsData)
+      }
     } catch (error) {
       console.error('Error loading dashboard data:', error)
     } finally {
@@ -180,11 +211,18 @@ export default function Dashboard() {
         <Grid item xs={6} sm={6} md={3}>
           <MetricCard
             title="Mis Reservas"
-            value={reservations.filter(r => {
-              const isMyReservation = r.userId === session.user?.id
-              const isFuture = new Date(r.date) > new Date()
-              return isMyReservation && isFuture
-            }).length}
+            value={
+              reservations.filter(r => {
+                const isMyReservation = r.userId === session.user?.id
+                const isFuture = new Date(r.date) > new Date()
+                return isMyReservation && isFuture
+              }).length +
+              bookings.filter(b => {
+                const isMyBooking = b.userId === session.user?.id
+                const isFuture = new Date(b.startTime) > new Date()
+                return isMyBooking && isFuture
+              }).length
+            }
             subtitle="próximas reservas"
             icon={<LocationOn />}
             color="warning"
@@ -197,6 +235,7 @@ export default function Dashboard() {
         <Grid item xs={12} md={6}>
           <UpcomingReservations 
             reservations={reservations} 
+            bookings={bookings}
             currentUserId={session.user?.id}
           />
         </Grid>
