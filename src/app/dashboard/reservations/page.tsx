@@ -835,25 +835,36 @@ export default function ReservationsPage() {
 
       {/* Dialog de confirmación */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="w-[95vw] max-w-[400px] max-h-[200px] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[300px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">{confirmAction?.title}</DialogTitle>
+            <DialogTitle className="text-xl sm:text-2xl font-bold text-center">
+              {confirmAction?.title}
+            </DialogTitle>
           </DialogHeader>
-          <div className="py-4 text-center">
-            <p className="text-sm sm:text-base text-muted-foreground">{confirmAction?.message}</p>
+          <div className="py-6 text-center">
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+              {confirmAction?.message}
+            </p>
           </div>
-          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4">
             <Button
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
-              className="w-full sm:w-auto h-10 sm:h-12 text-sm font-medium"
+              className="w-full sm:w-auto h-12 sm:h-14 text-base font-medium"
             >
               Cancelar
             </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmAction}
-              className="w-full sm:w-auto h-10 sm:h-12 text-sm font-medium"
+              className="w-full sm:w-auto h-12 sm:h-14 text-base font-medium"
             >
               Confirmar
             </Button>
