@@ -306,9 +306,13 @@ export default function ReservationsPage() {
 
   const handleCreateBooking = async (formData: FormData) => {
     try {
-      // Obtener fechas directamente del input datetime-local
+      // Obtener horas del input time
       const startTime = formData.get('startTime') as string
       const endTime = formData.get('endTime') as string
+
+      // Combinar la fecha seleccionada con las horas
+      const startDateTime = `${selectedDate}T${startTime}`
+      const endDateTime = `${selectedDate}T${endTime}`
 
       const response = await fetch('/api/meeting-room-bookings', {
         method: 'POST',
@@ -318,8 +322,8 @@ export default function ReservationsPage() {
         body: JSON.stringify({
           title: formData.get('title'),
           description: formData.get('description'),
-          startTime: startTime,
-          endTime: endTime,
+          startTime: startDateTime,
+          endTime: endDateTime,
           userId: session?.user?.id,
           meetingRoomId: selectedRoom?.id,
         }),
@@ -862,14 +866,14 @@ export default function ReservationsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="grid gap-2 sm:gap-3">
                   <label htmlFor="startTime" className="text-sm font-medium">
-                    Inicio
+                    Hora de inicio
                   </label>
                   <input
                     id="startTime"
                     name="startTime"
-                    type="datetime-local"
+                    type="time"
                     required
-                    defaultValue={selectedDate ? `${selectedDate}T09:00` : ''}
+                    defaultValue="09:00"
                     className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ 
                       'font-family': 'monospace'
@@ -879,14 +883,14 @@ export default function ReservationsPage() {
                 
                 <div className="grid gap-2 sm:gap-3">
                   <label htmlFor="endTime" className="text-sm font-medium">
-                    Fin
+                    Hora de fin
                   </label>
                   <input
                     id="endTime"
                     name="endTime"
-                    type="datetime-local"
+                    type="time"
                     required
-                    defaultValue={selectedDate ? `${selectedDate}T10:00` : ''}
+                    defaultValue="10:00"
                     className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     style={{ 
                       'font-family': 'monospace'
