@@ -156,6 +156,20 @@ export default function ReservationsPage() {
     return days
   }
 
+  // Función para formatear fecha en formato dd/mm/yyyy
+  const formatDateForDisplay = (date: Date) => {
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
+  // Función para convertir fecha de formato dd/mm/yyyy a Date
+  const parseDateFromDisplay = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/').map(Number)
+    return new Date(year, month - 1, day)
+  }
+
   // Función para crear una fecha correctamente desde un string YYYY-MM-DD
   const createDateFromString = (dateStr: string) => {
     const [year, month, day] = dateStr.split('-').map(Number)
@@ -815,6 +829,11 @@ export default function ReservationsPage() {
                     required
                     defaultValue={selectedDate ? `${selectedDate}T09:00` : ''}
                     className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ 
+                      '--tw-placeholder-opacity': '0.5',
+                      'font-family': 'monospace'
+                    } as React.CSSProperties}
+                    placeholder="dd/mm/yyyy hh:mm"
                   />
                 </div>
                 
@@ -829,6 +848,11 @@ export default function ReservationsPage() {
                     required
                     defaultValue={selectedDate ? `${selectedDate}T10:00` : ''}
                     className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ 
+                      '--tw-placeholder-opacity': '0.5',
+                      'font-family': 'monospace'
+                    } as React.CSSProperties}
+                    placeholder="dd/mm/yyyy hh:mm"
                   />
                 </div>
               </div>
@@ -869,10 +893,15 @@ export default function ReservationsPage() {
                 <input
                   id="date"
                   name="date"
-                  type="date"
-                  value={selectedDate || ''}
+                  type="text"
+                  value={selectedDate ? formatDateForDisplay(createDateFromString(selectedDate)) : ''}
                   disabled
                   className="flex h-10 sm:h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ 
+                    'font-family': 'monospace',
+                    'text-align': 'center'
+                  } as React.CSSProperties}
+                  placeholder="dd/mm/yyyy"
                 />
               </div>
 
