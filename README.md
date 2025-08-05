@@ -331,4 +331,8 @@ Para soporte técnico o preguntas, contactar al equipo de desarrollo.
 - **UX Mejorada**: Modales más anchos y campos touch-friendly
 - **Responsive Design**: Adaptación perfecta a todas las pantallas
 - **Gestión Completa**: Usuarios, equipos, salas y reservas
-- **Autenticación Segura**: NextAuth con roles y permisos 
+- **Autenticación Segura**: NextAuth con roles y permisos
+
+---
+
+**Última actualización: Agosto 2025 - Deployment optimizado para Vercel** 
