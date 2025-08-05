@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   AppBar,
   Toolbar,
@@ -87,28 +88,51 @@ export default function Navigation() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              flexGrow: 1,
-              fontSize: { xs: '1rem', sm: '1.25rem' },
-              display: { xs: 'none', sm: 'block' }
-            }}
-          >
-            Sistema de Asistencia
-          </Typography>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              flexGrow: 1,
-              fontSize: '1rem',
-              display: { xs: 'block', sm: 'none' }
-            }}
-          >
-            Asistencia
-          </Typography>
+          
+          {/* Logo */}
+          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ 
+              display: { xs: 'none', sm: 'block' },
+              height: { xs: 32, sm: 36, md: 40 },
+              width: 'auto',
+              maxWidth: { sm: 160, md: 180 }
+            }}>
+              <Image
+                src="/logo.svg"
+                alt="Logo Sistema de Asistencia"
+                width={180}
+                height={40}
+                style={{ 
+                  height: 'auto',
+                  width: '100%',
+                  maxWidth: '180px'
+                }}
+                priority
+              />
+            </Box>
+            
+            {/* Logo móvil más pequeño */}
+            <Box sx={{ 
+              display: { xs: 'block', sm: 'none' },
+              height: 28,
+              width: 'auto',
+              maxWidth: 120
+            }}>
+              <Image
+                src="/logo.svg"
+                alt="Logo Sistema de Asistencia"
+                width={120}
+                height={28}
+                style={{ 
+                  height: 'auto',
+                  width: '100%',
+                  maxWidth: '120px'
+                }}
+                priority
+              />
+            </Box>
+          </Box>
+          
           <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
             <Typography 
               variant="body2" 
