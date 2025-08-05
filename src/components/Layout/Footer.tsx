@@ -44,7 +44,7 @@ export default function Footer() {
               textAlign: 'center',
             }}
           >
-            by Francisco
+            by Fran
           </Typography>
         </Box>
       </Container>
