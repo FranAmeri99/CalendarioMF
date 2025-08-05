@@ -176,8 +176,8 @@ export default function ReservationsPage() {
   }
 
   const getAttendanceReservationsForDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
-    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
+    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
     const year = argentinaDate.getUTCFullYear()
     const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
     const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
@@ -185,7 +185,7 @@ export default function ReservationsPage() {
     
     return attendanceReservations.filter(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationArgentinaDate = new Date(reservationDate.getTime() + (3 * 60 * 60 * 1000))
+      const reservationArgentinaDate = new Date(reservationDate.getTime() - (3 * 60 * 60 * 1000))
       const reservationYear = reservationArgentinaDate.getUTCFullYear()
       const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
       const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
@@ -196,8 +196,8 @@ export default function ReservationsPage() {
 
   // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
   const hasUserReservationForDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
-    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
+    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
     const year = argentinaDate.getUTCFullYear()
     const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
     const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
@@ -205,7 +205,7 @@ export default function ReservationsPage() {
     
     return attendanceReservations.some(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationArgentinaDate = new Date(reservationDate.getTime() + (3 * 60 * 60 * 1000))
+      const reservationArgentinaDate = new Date(reservationDate.getTime() - (3 * 60 * 60 * 1000))
       const reservationYear = reservationArgentinaDate.getUTCFullYear()
       const reservationMonth = String(reservationArgentinaDate.getUTCMonth() + 1).padStart(2, '0')
       const reservationDay = String(reservationArgentinaDate.getUTCDate()).padStart(2, '0')
@@ -350,8 +350,8 @@ export default function ReservationsPage() {
   }
 
   const formatDate = (date: Date) => {
-    // Ajustar a zona horaria UTC-3 (Argentina) - sumar 3 horas para mantener la fecha correcta
-    const argentinaDate = new Date(date.getTime() + (3 * 60 * 60 * 1000))
+    // Ajustar a zona horaria UTC-3 (Argentina) - restar 3 horas para fechas de la base de datos
+    const argentinaDate = new Date(date.getTime() - (3 * 60 * 60 * 1000))
     const day = String(argentinaDate.getUTCDate()).padStart(2, '0')
     const month = String(argentinaDate.getUTCMonth() + 1).padStart(2, '0')
     const year = argentinaDate.getUTCFullYear()

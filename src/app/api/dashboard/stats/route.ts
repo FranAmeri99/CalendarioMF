@@ -53,16 +53,22 @@ export async function GET() {
     const reservedSpots = todayReservations.length
     const availableSpots = maxSpots - reservedSpots
 
-    // Calcular promedio semanal de ocupación
+    // Calcular promedio semanal de ocupación (solo días laborables: lunes a viernes)
     const weekStart = dayjs().tz('America/Argentina/Buenos_Aires').startOf('week')
     const weekEnd = dayjs().tz('America/Argentina/Buenos_Aires').endOf('week')
     
     const weeklyReservations = (reservations as any[]).filter(r => {
       const reservationDate = dayjs.utc(r.date).tz('America/Argentina/Buenos_Aires')
-      return reservationDate.isSameOrAfter(weekStart, 'day') && reservationDate.isSameOrBefore(weekEnd, 'day')
+      // Solo incluir reservas de lunes a viernes (días 1-5, donde 0=domingo, 1=lunes, etc.)
+      const dayOfWeek = reservationDate.day()
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5 // Lunes=1, Martes=2, ..., Viernes=5
+      
+      return reservationDate.isSameOrAfter(weekStart, 'day') && 
+             reservationDate.isSameOrBefore(weekEnd, 'day') && 
+             isWeekday
     })
 
-    const totalWeeklySpots = maxSpots * 7 // 7 días de la semana
+    const totalWeeklySpots = maxSpots * 5 // 5 días laborables (lunes a viernes)
     const totalWeeklyReservations = weeklyReservations.length
     const weeklyAverage = totalWeeklySpots > 0 ? Math.round((totalWeeklyReservations / totalWeeklySpots) * 100) : 0
 
