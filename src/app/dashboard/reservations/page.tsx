@@ -152,35 +152,65 @@ export default function ReservationsPage() {
   }
 
   const getBookingsForDate = (date: Date) => {
-    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD
+    // Usar el mismo formato que handleDateClick
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
     return bookings.filter(booking => {
       const bookingDate = new Date(booking.startTime)
-      const bookingDateStr = bookingDate.toLocaleDateString('en-CA')
+      const bookingYear = bookingDate.getFullYear()
+      const bookingMonth = String(bookingDate.getMonth() + 1).padStart(2, '0')
+      const bookingDay = String(bookingDate.getDate()).padStart(2, '0')
+      const bookingDateStr = `${bookingYear}-${bookingMonth}-${bookingDay}`
       return bookingDateStr === dateStr
     })
   }
 
   const getAttendanceReservationsForDate = (date: Date) => {
-    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD
+    // Usar el mismo formato que handleDateClick
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
     return attendanceReservations.filter(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationDateStr = reservationDate.toLocaleDateString('en-CA')
+      const reservationYear = reservationDate.getFullYear()
+      const reservationMonth = String(reservationDate.getMonth() + 1).padStart(2, '0')
+      const reservationDay = String(reservationDate.getDate()).padStart(2, '0')
+      const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
       return reservationDateStr === dateStr
     })
   }
 
   // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
   const hasUserReservationForDate = (date: Date) => {
-    const dateStr = date.toLocaleDateString('en-CA') // YYYY-MM-DD
+    // Usar el mismo formato que handleDateClick
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
     return attendanceReservations.some(reservation => {
       const reservationDate = new Date(reservation.date)
-      const reservationDateStr = reservationDate.toLocaleDateString('en-CA')
+      const reservationYear = reservationDate.getFullYear()
+      const reservationMonth = String(reservationDate.getMonth() + 1).padStart(2, '0')
+      const reservationDay = String(reservationDate.getDate()).padStart(2, '0')
+      const reservationDateStr = `${reservationYear}-${reservationMonth}-${reservationDay}`
       return reservationDateStr === dateStr && reservation.userId === session?.user?.id
     })
   }
 
   const handleDateClick = (date: Date) => {
-    const dateStr = date.toLocaleDateString('en-CA')
+    // Asegurar que se use la fecha correcta sin problemas de zona horaria
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+    
+    console.log('Fecha seleccionada:', dateStr)
     setSelectedDate(dateStr)
     setShowDetailsDialog(true)
   }
