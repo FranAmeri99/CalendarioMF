@@ -13,9 +13,6 @@ import {
   CircularProgress,
 } from '@mui/material'
 import {
-  People,
-  Business,
-  CalendarToday,
   Check,
   Warning,
   LocationOn,
@@ -167,7 +164,7 @@ export default function Dashboard() {
             title="Promedio Semanal"
             value={`${stats.weeklyAverage}%`}
             subtitle="de ocupación"
-            icon={<Business />}
+            icon={<Check />}
             color="secondary"
           />
         </Grid>
@@ -176,7 +173,7 @@ export default function Dashboard() {
             title="Total Empleados"
             value={stats.totalUsers}
             subtitle={`${stats.totalTeams} equipos activos`}
-            icon={<People />}
+            icon={<Warning />}
             color="success"
           />
         </Grid>
@@ -189,7 +186,7 @@ export default function Dashboard() {
               return isMyReservation && isFuture
             }).length}
             subtitle="próximas reservas"
-            icon={<CalendarToday />}
+            icon={<LocationOn />}
             color="warning"
           />
         </Grid>
@@ -205,100 +202,7 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* Acciones rápidas */}
-      <Box mt={{ xs: '24px', sm: '32px' }}>
-        <Paper
-          sx={{
-            p: { xs: '16px', sm: '24px' },
-            background: '#ffffff',
-            border: '1px solid #e8e8e8',
-            borderRadius: { xs: '12px', sm: '16px' },
-            boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.08)',
-          }}
-        >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 600,
-              mb: { xs: '12px', sm: '16px' },
-              fontSize: { xs: '16px', sm: '18px' },
-              lineHeight: { xs: '20px', sm: '24px' },
-              color: '#1a1a1a'
-            }}
-          >
-            Acciones Rápidas
-          </Typography>
-          <Box display="flex" gap={{ xs: '8px', sm: '16px' }} flexWrap="wrap" flexDirection={{ xs: 'column', sm: 'row' }}>
-            <Button
-              variant="contained"
-              startIcon={<CalendarToday />}
-              onClick={() => router.push('/dashboard/reservations')}
-              sx={{
-                borderRadius: { xs: '8px', sm: '12px' },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: { xs: '16px', sm: '24px' },
-                py: { xs: '10px', sm: '12px' },
-                fontSize: { xs: '13px', sm: '14px' },
-                lineHeight: { xs: '18px', sm: '20px' },
-                bgcolor: '#1976d2',
-                width: { xs: '100%', sm: 'auto' },
-                '&:hover': {
-                  bgcolor: '#1565c0'
-                }
-              }}
-            >
-              Nueva Reserva
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Business />}
-              onClick={() => router.push('/dashboard/teams')}
-              sx={{
-                borderRadius: { xs: '8px', sm: '12px' },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: { xs: '16px', sm: '24px' },
-                py: { xs: '10px', sm: '12px' },
-                fontSize: { xs: '13px', sm: '14px' },
-                lineHeight: { xs: '18px', sm: '20px' },
-                borderColor: '#e0e0e0',
-                color: '#1a1a1a',
-                width: { xs: '100%', sm: 'auto' },
-                '&:hover': {
-                  borderColor: '#1976d2',
-                  bgcolor: 'rgba(25, 118, 210, 0.04)'
-                }
-              }}
-            >
-              Ver Equipos
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<People />}
-              onClick={() => router.push('/dashboard/users')}
-              sx={{
-                borderRadius: { xs: '8px', sm: '12px' },
-                textTransform: 'none',
-                fontWeight: 600,
-                px: { xs: '16px', sm: '24px' },
-                py: { xs: '10px', sm: '12px' },
-                fontSize: { xs: '13px', sm: '14px' },
-                lineHeight: { xs: '18px', sm: '20px' },
-                borderColor: '#e0e0e0',
-                color: '#1a1a1a',
-                width: { xs: '100%', sm: 'auto' },
-                '&:hover': {
-                  borderColor: '#1976d2',
-                  bgcolor: 'rgba(25, 118, 210, 0.04)'
-                }
-              }}
-            >
-              Gestionar Usuarios
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
+
     </Container>
   )
 } 

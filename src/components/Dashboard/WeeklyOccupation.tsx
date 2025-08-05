@@ -162,7 +162,7 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
                       lineHeight: { xs: '12px', sm: '14px' }
                     }}
                   >
-                    {day.format('d/M')}
+                    {day.format('DD/MM')}
                   </Typography>
                 </Box>
 
