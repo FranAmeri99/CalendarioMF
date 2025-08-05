@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Box, CircularProgress } from '@mui/material'
 import Navigation from '@/components/Layout/Navigation'
+import Footer from '@/components/Layout/Footer'
 
 export default function DashboardLayout({
   children,
@@ -45,6 +46,7 @@ export default function DashboardLayout({
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 1, sm: 2, md: 3 } }}>
         {children}
       </Box>
+      <Footer />
     </Box>
   )
 } 
