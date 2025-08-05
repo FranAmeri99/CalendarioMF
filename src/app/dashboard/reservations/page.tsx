@@ -101,6 +101,11 @@ export default function ReservationsPage() {
 
       if (calendarResponse.ok) {
         const calendarData = await calendarResponse.json()
+        console.log('📊 Datos recibidos de /api/calendar:', {
+          reservationsCount: calendarData.reservations?.length || 0,
+          reservations: calendarData.reservations,
+          config: calendarData.config
+        })
         setAttendanceReservations(calendarData.reservations || [])
         if (calendarData.config?.maxSpotsPerDay) {
           setMaxSpotsPerDay(calendarData.config.maxSpotsPerDay)
@@ -193,6 +198,7 @@ export default function ReservationsPage() {
     if (showLogs) {
       console.log('🔍 getAttendanceReservationsForDate - Fecha seleccionada:', dateStr)
       console.log('🔍 getAttendanceReservationsForDate - Fecha objeto:', date)
+      console.log('🔍 getAttendanceReservationsForDate - Total reservas disponibles:', attendanceReservations.length)
     }
     
     return attendanceReservations.filter(reservation => {
@@ -202,6 +208,13 @@ export default function ReservationsPage() {
       
       if (showLogs) {
         console.log(`🔍 Reservation: ${reservation.user.name} - Original: ${reservation.date} - Formateada: ${reservationDateStr} - Coincide: ${reservationDateStr === dateStr}`)
+        console.log(`🔍 Detalles fecha:`, {
+          original: reservation.date,
+          parsed: reservationDate,
+          isoString: reservationDate.toISOString(),
+          localString: reservationDate.toLocaleDateString('en-CA'),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
       }
       
       return reservationDateStr === dateStr
