@@ -19,10 +19,11 @@ model User {
   updatedAt    DateTime      @updatedAt
   reservations Reservation[]
   meetingRoomBookings MeetingRoomBooking[]
-  teamMembers  Team[]        @relation("TeamMembers")
   userTeams    UserTeam[]    // Nueva relación muchos a muchos
   team         Team?         @relation(fields: [teamId], references: [id])
   teamId       String?       // Mantener para compatibilidad con reservas existentes
+  teamsAsLeader Team[]       @relation("TeamLeader")
+  teamsAsUser  Team[]        @relation("TeamUsers")
 
   @@map("users")
 }
@@ -36,9 +37,10 @@ model Team {
   updatedAt    DateTime      @updatedAt
   leaderId     String?
   reservations Reservation[]
-  leader       User?         @relation("TeamMembers", fields: [leaderId], references: [id])
+  leader       User?         @relation("TeamLeader", fields: [leaderId], references: [id])
   userTeams    UserTeam[]    // Nueva relación muchos a muchos
-  users        User[]        // Relación opuesta para teamId
+  users        User[]        @relation("TeamUsers") // Relación opuesta para teamId
+  mainUsers    User[]        // Relación opuesta para teamId (compatibilidad)
 
   @@map("teams")
 }
