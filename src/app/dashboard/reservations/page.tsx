@@ -59,6 +59,7 @@ export default function ReservationsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [attendanceReservations, setAttendanceReservations] = useState<AttendanceReservation[]>([])
   const [teams, setTeams] = useState<any[]>([])
+  const [teamsByDay, setTeamsByDay] = useState<{[key: number]: any[]}>({})
   const [maxSpotsPerDay, setMaxSpotsPerDay] = useState(12)
   const [loading, setLoading] = useState(true)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -86,7 +87,7 @@ export default function ReservationsPage() {
         fetch('/api/meeting-rooms'),
         fetch('/api/meeting-room-bookings'),
         fetch('/api/calendar'),
-        fetch('/api/teams?simple=true')
+        fetch('/api/teams')
       ])
 
       if (roomsResponse.ok) {
@@ -114,7 +115,21 @@ export default function ReservationsPage() {
 
       if (teamsResponse.ok) {
         const teamsData = await teamsResponse.json()
-        setTeams(Array.isArray(teamsData) ? teamsData : [])
+        // teamsData puede ser un array simple o un objeto con teams y users
+        const teams = Array.isArray(teamsData) ? teamsData : teamsData.teams || []
+        setTeams(teams)
+        
+        // Organizar equipos por día de asistencia
+        const teamsByDayMap: {[key: number]: any[]} = {}
+        teams.forEach((team: any) => {
+          if (team.attendanceDay !== undefined && team.attendanceDay !== null) {
+            if (!teamsByDayMap[team.attendanceDay]) {
+              teamsByDayMap[team.attendanceDay] = []
+            }
+            teamsByDayMap[team.attendanceDay].push(team)
+          }
+        })
+        setTeamsByDay(teamsByDayMap)
       } else {
         console.error('Error fetching teams:', teamsResponse.status)
         setTeams([])
@@ -271,6 +286,71 @@ export default function ReservationsPage() {
       
       return reservationDateStr === dateStr
     })
+  }
+
+  // Función para obtener el total de asistencias esperadas para una fecha (individuales + masivas de equipos)
+  const getTotalExpectedAttendanceForDate = (date: Date) => {
+    const individualReservations = getAttendanceReservationsForDate(date)
+    const teamsForDay = getTeamsForDate(date)
+    
+    // Set para rastrear usuarios únicos (evitar duplicados cuando una persona está en múltiples equipos)
+    const uniqueUsers = new Set<string>()
+    
+    // Agregar usuarios con reservas individuales
+    individualReservations.forEach(reservation => {
+      uniqueUsers.add(reservation.userId)
+    })
+    
+    // Agregar miembros de equipos (solo si no tienen reserva individual)
+    teamsForDay.forEach(team => {
+      if (team.members && team.members.length > 0) {
+        team.members.forEach((member: any) => {
+          // Solo agregar si no tiene reserva individual para este día
+          const hasIndividualReservation = individualReservations.some(reservation => 
+            reservation.userId === member.id
+          )
+          
+          if (!hasIndividualReservation) {
+            uniqueUsers.add(member.id)
+          }
+        })
+      }
+    })
+    
+    return uniqueUsers.size
+  }
+
+  // Función para obtener todas las personas que asistirán a una fecha específica
+  const getAllAttendeesForDate = (date: Date) => {
+    const individualReservations = getAttendanceReservationsForDate(date)
+    const teamsForDay = getTeamsForDate(date)
+    
+    const attendees = {
+      individual: individualReservations,
+      teamMembers: [] as any[]
+    }
+    
+    // Agregar miembros de equipos
+    teamsForDay.forEach(team => {
+      if (team.members && team.members.length > 0) {
+        team.members.forEach((member: any) => {
+          // Verificar si el miembro ya tiene una reserva individual
+          const hasIndividualReservation = individualReservations.some(reservation => 
+            reservation.userId === member.id
+          )
+          
+          if (!hasIndividualReservation) {
+            attendees.teamMembers.push({
+              ...member,
+              teamName: team.name,
+              teamId: team.id
+            })
+          }
+        })
+      }
+    })
+    
+    return attendees
   }
 
   // Función para verificar si el usuario ya tiene una reserva para el día seleccionado
@@ -453,6 +533,44 @@ export default function ReservationsPage() {
     return colors[roomIndex % colors.length]
   }
 
+  const getDayName = (day: number) => {
+    const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    return days[day] || 'Sin asignar'
+  }
+
+  const getTeamsForDate = (date: Date) => {
+    const dayOfWeek = date.getDay()
+    // Convertir de domingo=0 a lunes=0
+    const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    return teamsByDay[adjustedDay] || []
+  }
+
+  const handleRegisterTeamAttendance = async (teamId: string, date: string) => {
+    try {
+      const response = await fetch('/api/teams', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teamId,
+          date,
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Asistencia del equipo registrada exitosamente')
+        fetchData()
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Error al registrar asistencia del equipo')
+      }
+    } catch (error) {
+      console.error('Error registering team attendance:', error)
+      toast.error('Error al registrar asistencia del equipo')
+    }
+  }
+
   const days = getDaysInMonth(currentDate)
   const today = new Date().toLocaleDateString('en-CA')
   const monthYear = currentDate.toLocaleDateString('es-ES', { 
@@ -539,81 +657,127 @@ export default function ReservationsPage() {
 
               const dayBookings = getBookingsForDate(day)
               const dayAttendanceReservations = getAttendanceReservationsForDate(day)
+              const teamsForDay = getTeamsForDate(day)
               const isToday = day.toLocaleDateString('en-CA') === today
               const isCurrentMonth = day.getMonth() === currentDate.getMonth()
 
-                             return (
-                 <div
-                   key={index}
-                   className={`p-1 sm:p-2 min-h-[80px] sm:min-h-[120px] border rounded-md cursor-pointer hover:bg-muted/50 transition-colors ${
-                     isToday ? 'bg-blue-50 border-blue-200' : ''
-                   } ${!isCurrentMonth ? 'opacity-50' : ''}`}
-                   onClick={() => handleDateClick(day)}
-                 >
-                   <div className="flex justify-between items-start mb-1">
-                     <span className={`text-xs sm:text-sm font-medium ${isToday ? 'text-blue-600' : ''}`}>
-                       {day.getDate()}
-                     </span>
-                     <div className="flex gap-0.5 sm:gap-1">
-                       {dayBookings.length > 0 && (
-                         <Badge variant="secondary" className="text-xs px-1 py-0.5">
-                           {dayBookings.length}
-                         </Badge>
-                       )}
-                       
-                     </div>
-                   </div>
+              return (
+                <div
+                  key={index}
+                  className={`p-1 sm:p-2 min-h-[80px] sm:min-h-[120px] border rounded-md cursor-pointer hover:bg-muted/50 transition-colors ${
+                    isToday ? 'bg-blue-50 border-blue-200' : ''
+                  } ${!isCurrentMonth ? 'opacity-50' : ''}`}
+                  onClick={() => handleDateClick(day)}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className={`text-xs sm:text-sm font-medium ${isToday ? 'text-blue-600' : ''}`}>
+                      {day.getDate()}
+                    </span>
+                    <div className="flex gap-0.5 sm:gap-1">
+                      {dayBookings.length > 0 && (
+                        <Badge variant="secondary" className="text-xs px-1 py-0.5">
+                          {dayBookings.length}
+                        </Badge>
+                      )}
+                      {teamsForDay.length > 0 && (
+                        <Badge variant="outline" className="text-xs px-1 py-0.5 bg-green-50 text-green-700 border-green-200">
+                          {teamsForDay.length}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
 
-                                     <div className="space-y-0.5 sm:space-y-1">
-                     {/* Reservas de salas de reuniones - mostrar detalles */}
-                     {dayBookings.slice(0, 1).map((booking) => (
-                       <div
-                         key={booking.id}
-                         className="p-0.5 sm:p-1 rounded text-xs"
-                         style={{
-                           backgroundColor: getRoomColor(booking.meetingRoomId) + '20',
-                           borderLeft: `2px solid ${getRoomColor(booking.meetingRoomId)}`,
-                         }}
-                       >
-                         <div className="flex justify-between items-start">
-                           <div className="flex-1 min-w-0">
-                             <p className="font-medium truncate text-xs" title={booking.title}>
-                               {booking.title}
-                             </p>
-                             <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                               {booking.meetingRoom.name}
-                             </p>
-                             <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
-                               <Clock className="w-2 h-2" />
-                               <span className="text-xs">
-                                 {formatTime(booking.startTime)}
-                               </span>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     ))}
-                     
-                     {/* Asistencia - mostrar barra de progreso */}
-                     {dayAttendanceReservations.length > 0 && (
-                       <div className="space-y-0.5 sm:space-y-1">
-                         <div className="flex justify-between items-center text-xs">
-                           <span className="text-muted-foreground hidden sm:inline">Asistencia</span>
-                           <span className="font-medium text-xs">
-                             {dayAttendanceReservations.length}/{maxSpotsPerDay}
-                           </span>
-                         </div>
-                         <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
-                           <div
-                             className="bg-green-500 h-1.5 sm:h-2 rounded-full transition-all duration-300"
-                             style={{
-                               width: `${Math.min((dayAttendanceReservations.length / maxSpotsPerDay) * 100, 100)}%`
-                             }}
-                           />
-                         </div>
-                       </div>
-                     )}
-                   </div>
+                  <div className="space-y-0.5 sm:space-y-1">
+                    {/* Equipos que asisten este día */}
+                    {teamsForDay.length > 0 && (
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground hidden sm:inline">Equipos</span>
+                          <span className="font-medium text-xs text-green-600">
+                            {teamsForDay.length} equipo{teamsForDay.length > 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        {teamsForDay.slice(0, 2).map((team) => (
+                          <div
+                            key={team.id}
+                            className="p-0.5 sm:p-1 rounded text-xs bg-green-50 border border-green-200"
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium text-xs text-green-700 truncate" title={team.name}>
+                                {team.name}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-4 w-4 p-0 text-green-600 hover:text-green-700"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleRegisterTeamAttendance(team.id, day.toLocaleDateString('en-CA'))
+                                }}
+                                title="Registrar asistencia del equipo"
+                              >
+                                <Plus className="w-2 h-2" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {teamsForDay.length > 2 && (
+                          <div className="text-xs text-muted-foreground text-center">
+                            +{teamsForDay.length - 2} más
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Reservas de salas de reuniones - mostrar detalles */}
+                    {dayBookings.slice(0, 1).map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="p-0.5 sm:p-1 rounded text-xs"
+                        style={{
+                          backgroundColor: getRoomColor(booking.meetingRoomId) + '20',
+                          borderLeft: `2px solid ${getRoomColor(booking.meetingRoomId)}`,
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate text-xs" title={booking.title}>
+                              {booking.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate hidden sm:block">
+                              {booking.meetingRoom.name}
+                            </p>
+                            <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+                              <Clock className="w-2 h-2" />
+                              <span className="text-xs">
+                                {formatTime(booking.startTime)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Asistencia - mostrar barra de progreso */}
+                    {(dayAttendanceReservations.length > 0 || teamsForDay.length > 0) && (
+                      <div className="space-y-0.5 sm:space-y-1">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground hidden sm:inline">Asistencia</span>
+                          <span className="font-medium text-xs">
+                            {getTotalExpectedAttendanceForDate(day)}/{maxSpotsPerDay}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
+                          <div
+                            className="bg-green-500 h-1.5 sm:h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min((getTotalExpectedAttendanceForDate(day) / maxSpotsPerDay) * 100, 100)}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
@@ -644,6 +808,23 @@ export default function ReservationsPage() {
               </div>
             </div>
             
+            {/* Leyenda de equipos */}
+            <div className="col-span-full mt-3 sm:mt-4">
+              <h4 className="text-sm font-medium mb-2">Equipos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-50 border border-green-200 rounded"></div>
+                  <span className="text-xs sm:text-sm">Equipos que asisten</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded flex items-center justify-center">
+                    <Plus className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" />
+                  </div>
+                  <span className="text-xs sm:text-sm">Botón de registro masivo</span>
+                </div>
+              </div>
+            </div>
+
             {/* Leyenda de asistencia */}
             <div className="col-span-full mt-3 sm:mt-4">
               <h4 className="text-sm font-medium mb-2">Asistencia</h4>
@@ -708,49 +889,102 @@ export default function ReservationsPage() {
               )}
             </div>
 
+            {/* Equipos que asisten este día */}
+            {selectedDate && getTeamsForDate(createDateFromString(selectedDate)).length > 0 && (
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Equipos que Asisten</h3>
+                <div className="space-y-2 sm:space-y-3">
+                  {selectedDate && getTeamsForDate(createDateFromString(selectedDate)).map((team) => (
+                    <div key={team.id} className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base text-green-700">{team.name}</h4>
+                        {team.description && (
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{team.description}</p>
+                        )}
+                        {team.members && team.members.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {team.members.length} miembro{team.members.length > 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-green-600 border-green-300 hover:bg-green-50"
+                        onClick={() => handleRegisterTeamAttendance(team.id, selectedDate)}
+                      >
+                        <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                        Registrar
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Reservas de asistencia */}
             <div>
               <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Asistencia</h3>
-              {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length === 0 ? (
+              {selectedDate && (getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length === 0 && getTeamsForDate(createDateFromString(selectedDate)).length === 0) ? (
                 <p className="text-muted-foreground text-sm">No hay reservas de asistencia para este día</p>
               ) : (
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-xs sm:text-sm font-medium">Ocupación</span>
                     <span className="text-xs sm:text-sm">
-                      {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length}/{maxSpotsPerDay}
+                      {selectedDate && getTotalExpectedAttendanceForDate(createDateFromString(selectedDate))}/{maxSpotsPerDay}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                     <div
                       className="bg-green-500 h-2 sm:h-3 rounded-full transition-all duration-300"
                       style={{
-                        width: `${Math.min((selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length || 0) / maxSpotsPerDay * 100, 100)}%`
+                        width: `${Math.min((selectedDate && getTotalExpectedAttendanceForDate(createDateFromString(selectedDate)) || 0) / maxSpotsPerDay * 100, 100)}%`
                       }}
                     />
                   </div>
-                  <div className="space-y-1 sm:space-y-2">
-                    {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).map((reservation) => (
-                      <div key={reservation.id} className="flex justify-between items-center p-2 bg-green-50 rounded">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-xs sm:text-sm">{reservation.user.name}</p>
-                          {reservation.team && (
-                            <p className="text-xs text-muted-foreground">{reservation.team.name}</p>
+                  
+                  {/* Personas con reservas individuales */}
+                  {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).length > 0 && (
+                    <div className="space-y-1 sm:space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">Reservas Individuales</h4>
+                      {selectedDate && getAttendanceReservationsForDate(createDateFromString(selectedDate), true).map((reservation) => (
+                        <div key={reservation.id} className="flex justify-between items-center p-2 bg-green-50 rounded">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-xs sm:text-sm">{reservation.user.name}</p>
+                            {reservation.team && (
+                              <p className="text-xs text-muted-foreground">{reservation.team.name}</p>
+                            )}
+                          </div>
+                          {reservation.userId === session?.user?.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive flex-shrink-0"
+                              onClick={() => handleDeleteAttendance(reservation.id)}
+                            >
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Button>
                           )}
                         </div>
-                        {reservation.userId === session?.user?.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive flex-shrink-0"
-                            onClick={() => handleDeleteAttendance(reservation.id)}
-                          >
-                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Miembros de equipos que asistirán */}
+                  {selectedDate && getAllAttendeesForDate(createDateFromString(selectedDate)).teamMembers.length > 0 && (
+                    <div className="space-y-1 sm:space-y-2">
+                      <h4 className="text-sm font-medium text-muted-foreground">Miembros de Equipos</h4>
+                      {selectedDate && getAllAttendeesForDate(createDateFromString(selectedDate)).teamMembers.map((member, index) => (
+                        <div key={`${member.id}-${index}`} className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-xs sm:text-sm">{member.name}</p>
+                            <p className="text-xs text-muted-foreground">{member.teamName}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

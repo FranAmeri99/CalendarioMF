@@ -11,7 +11,8 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 - **Calendario Integrado**: Vista mensual con reservas de asistencia y salas de reuniones
 - **Gestión de Salas de Reuniones**: Crear, editar y eliminar salas de reuniones
 - **ABM de Personas**: Alta, baja y modificación de colaboradores
-- **Gestión de Equipos**: Crear y administrar equipos de trabajo
+- **Gestión de Equipos**: Crear y administrar equipos de trabajo con relación muchos a muchos
+- **Asistencia Semanal por Equipos**: Sistema de días de asistencia automática por equipo
 - **Perfil de Usuario**: Información personal e historial de reservas
 - **Sistema de Autenticación**: Login seguro con NextAuth
 - **Interfaz Mobile-First**: Diseño completamente responsive optimizado para móviles
@@ -96,8 +97,9 @@ Una aplicación web completa para gestionar la asistencia de colaboradores a la 
 
 ### Relaciones
 
-- Un usuario puede pertenecer a un equipo
+- Un usuario puede pertenecer a múltiples equipos (relación muchos a muchos)
 - Un equipo puede tener múltiples miembros y un líder
+- Los líderes de equipos también son considerados miembros del equipo
 - Las reservas de asistencia están asociadas a usuarios y equipos
 - Las reservas de salas están asociadas a usuarios y salas específicas
 

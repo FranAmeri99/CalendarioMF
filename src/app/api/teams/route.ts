@@ -13,13 +13,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(teams)
     }
 
-    // Si no se solicita simple, devolver equipos con usuarios
-    const [teams, users] = await Promise.all([
-      TeamService.getAllTeams(),
-      UserService.getAllUsers(),
-    ])
-
-    return NextResponse.json({ teams, users })
+    // Si no se solicita simple, devolver equipos completos
+    const teams = await TeamService.getAllTeams()
+    return NextResponse.json(teams)
   } catch (error) {
     console.error('Error fetching teams:', error)
     return NextResponse.json(
@@ -32,7 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, leaderId } = body
+    const { name, description, leaderId, attendanceDay } = body
 
     if (!name) {
       return NextResponse.json(
@@ -45,6 +41,7 @@ export async function POST(request: NextRequest) {
       name,
       description: description || '',
       leaderId: leaderId || undefined,
+      attendanceDay: attendanceDay !== undefined ? attendanceDay : undefined,
     })
 
     return NextResponse.json({ team })
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, name, description, leaderId } = body
+    const { id, name, description, leaderId, attendanceDay } = body
 
     if (!id || !name) {
       return NextResponse.json(
@@ -73,6 +70,7 @@ export async function PUT(request: NextRequest) {
       name,
       description: description || '',
       leaderId: leaderId || undefined,
+      attendanceDay: attendanceDay !== undefined ? attendanceDay : undefined,
     })
 
     return NextResponse.json({ team })
@@ -103,6 +101,33 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting team:', error)
     return NextResponse.json(
       { error: 'Error al eliminar el equipo' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { teamId, date } = body
+
+    if (!teamId || !date) {
+      return NextResponse.json(
+        { error: 'ID del equipo y fecha son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    await TeamService.registerTeamAttendance(teamId, new Date(date))
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Asistencia del equipo registrada exitosamente' 
+    })
+  } catch (error) {
+    console.error('Error registering team attendance:', error)
+    return NextResponse.json(
+      { error: 'Error al registrar asistencia del equipo' },
       { status: 500 }
     )
   }

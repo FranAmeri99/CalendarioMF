@@ -25,6 +25,7 @@ import {
   CircularProgress,
   Alert,
   Snackbar,
+  IconButton,
 } from '@mui/material'
 import {
   Person,
@@ -34,6 +35,8 @@ import {
   Edit,
   Check,
   Close,
+  Add,
+  Delete,
 } from '@mui/icons-material'
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
@@ -47,11 +50,26 @@ interface UserProfile {
   name: string
   email: string
   role: string
-  teamId?: string
+  teamId?: string // Mantener para compatibilidad
   team?: {
     id: string
     name: string
   }
+  teams?: {
+    id: string
+    name: string
+    description?: string
+    leader?: {
+      id: string
+      name: string
+      email: string
+    }
+    members?: {
+      id: string
+      name: string
+      email: string
+    }[]
+  }[] // Nueva relación muchos a muchos con detalles
   createdAt: string
 }
 
@@ -66,6 +84,17 @@ interface Reservation {
 interface Team {
   id: string
   name: string
+  description?: string
+  leader?: {
+    id: string
+    name: string
+    email: string
+  }
+  members?: {
+    id: string
+    name: string
+    email: string
+  }[]
 }
 
 export default function ProfilePage() {
@@ -84,9 +113,10 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    teamId: '',
-    password: '', // nuevo campo
+    teamId: '', // Mantener para compatibilidad
+    password: '',
   })
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([])
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -112,7 +142,7 @@ export default function ProfilePage() {
 
       // Obtener equipos y reservas en paralelo
       const [teamsResponse, reservationsResponse] = await Promise.all([
-        fetch('/api/teams?simple=true'),
+        fetch('/api/teams'),
         fetch(`/api/reservations?userId=${userData.id}`)
       ])
 
@@ -130,6 +160,9 @@ export default function ProfilePage() {
         teamId: userData.teamId || '',
         password: '',
       })
+
+      // Inicializar equipos seleccionados
+      setSelectedTeams(userData.teams?.map((team: any) => team.id) || [])
     } catch (error) {
       console.error('Error fetching profile data:', error)
       setSnackbar({
@@ -148,8 +181,9 @@ export default function ProfilePage() {
         name: profile.name,
         email: profile.email,
         teamId: profile.teamId || '',
-        password: '', // limpiar campo de password
+        password: '',
       })
+      setSelectedTeams(profile.teams?.map(team => team.id) || [])
     }
     setEditMode(true)
   }
@@ -163,6 +197,7 @@ export default function ProfilePage() {
         teamId: profile.teamId || '',
         password: '',
       })
+      setSelectedTeams(profile.teams?.map(team => team.id) || [])
     }
   }
 
@@ -206,8 +241,33 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        const updatedUser = await response.json()
-        setProfile(updatedUser)
+        // Actualizar equipos del usuario
+        const currentTeams = profile.teams?.map(team => team.id) || []
+        
+        // Agregar equipos nuevos
+        for (const teamId of selectedTeams) {
+          if (!currentTeams.includes(teamId)) {
+            await fetch(`/api/users/${profile.id}/teams`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ teamId }),
+            })
+          }
+        }
+
+        // Remover equipos que ya no están seleccionados
+        for (const teamId of currentTeams) {
+          if (!selectedTeams.includes(teamId)) {
+            await fetch(`/api/users/${profile.id}/teams/${teamId}`, {
+              method: 'DELETE',
+            })
+          }
+        }
+
+        // Recargar datos del perfil
+        await fetchProfileData()
         setEditMode(false)
         
         setSnackbar({
@@ -227,6 +287,70 @@ export default function ProfilePage() {
       })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleAddTeam = async (teamId: string) => {
+    try {
+      if (!profile) return
+
+      const response = await fetch(`/api/users/${profile.id}/teams`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamId }),
+      })
+
+      if (response.ok) {
+        setSelectedTeams([...selectedTeams, teamId])
+        setSnackbar({
+          open: true,
+          message: 'Equipo agregado exitosamente',
+          severity: 'success'
+        })
+        // Recargar datos del perfil
+        fetchProfileData()
+      } else {
+        throw new Error('Error al agregar equipo')
+      }
+    } catch (error) {
+      console.error('Error adding team:', error)
+      setSnackbar({
+        open: true,
+        message: 'Error al agregar equipo',
+        severity: 'error'
+      })
+    }
+  }
+
+  const handleRemoveTeam = async (teamId: string) => {
+    try {
+      if (!profile) return
+
+      const response = await fetch(`/api/users/${profile.id}/teams/${teamId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setSelectedTeams(selectedTeams.filter(id => id !== teamId))
+        setSnackbar({
+          open: true,
+          message: 'Equipo removido exitosamente',
+          severity: 'success'
+        })
+        // Recargar datos del perfil
+        fetchProfileData()
+      } else {
+        throw new Error('Error al remover equipo')
+      }
+    } catch (error) {
+      console.error('Error removing team:', error)
+      setSnackbar({
+        open: true,
+        message: 'Error al remover equipo',
+        severity: 'error'
+      })
     }
   }
 
@@ -410,11 +534,11 @@ export default function ProfilePage() {
                     }}
                   />
                   <FormControl fullWidth size="small">
-                    <InputLabel>Equipo</InputLabel>
+                    <InputLabel>Equipo Principal</InputLabel>
                     <Select
                       value={formData.teamId}
                       onChange={(e) => setFormData({ ...formData, teamId: e.target.value })}
-                      label="Equipo"
+                      label="Equipo Principal"
                       sx={{
                         '& .MuiInputBase-root': {
                           height: { xs: '48px', sm: '56px' }
@@ -476,6 +600,39 @@ export default function ProfilePage() {
                       />
                     )}
                   </Box>
+                  
+                  {/* Mostrar múltiples equipos */}
+                  {profile.teams && profile.teams.length > 0 && (
+                    <Box mt={1}>
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
+                          fontSize: { xs: '10px', sm: '11px' },
+                          display: 'block',
+                          textAlign: 'center',
+                          mb: 0.5
+                        }}
+                      >
+                        Equipos:
+                      </Typography>
+                      <Box display="flex" justifyContent="center" gap={0.5} flexWrap="wrap">
+                        {profile.teams.map((team) => (
+                          <Chip
+                            key={team.id}
+                            label={team.name}
+                            size="small"
+                            variant="outlined"
+                            sx={{ 
+                              fontSize: { xs: '9px', sm: '10px' },
+                              height: { xs: '18px', sm: '20px' }
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                  
                   <Typography 
                     variant="caption" 
                     color="text.secondary" 
@@ -494,8 +651,190 @@ export default function ProfilePage() {
           </Paper>
         </Grid>
 
-        {/* Historial de Reservas */}
+        {/* Gestión de Equipos */}
         <Grid item xs={12} md={8}>
+          <Paper sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderRadius: { xs: '12px', sm: '16px' }
+          }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '16px', sm: '20px' },
+                mb: { xs: 1, sm: 2 }
+              }}
+            >
+              Mis Equipos
+            </Typography>
+            
+            {editMode ? (
+              <Box>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontSize: { xs: '12px', sm: '13px' },
+                    mb: 2
+                  }}
+                >
+                  Selecciona los equipos a los que perteneces:
+                </Typography>
+                <Box display="flex" flexDirection="column" gap={1}>
+                  {teams.map((team) => (
+                    <Box 
+                      key={team.id} 
+                      display="flex" 
+                      alignItems="center" 
+                      justifyContent="space-between"
+                      p={1}
+                      sx={{ 
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        bgcolor: selectedTeams.includes(team.id) ? '#f5f5f5' : 'transparent'
+                      }}
+                    >
+                      <Box>
+                        <Typography sx={{ fontSize: { xs: '13px', sm: '14px' }, fontWeight: 600 }}>
+                          {team.name}
+                        </Typography>
+                        {team.description && (
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary"
+                            sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                          >
+                            {team.description}
+                          </Typography>
+                        )}
+                      </Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          if (selectedTeams.includes(team.id)) {
+                            setSelectedTeams(selectedTeams.filter(id => id !== team.id))
+                          } else {
+                            setSelectedTeams([...selectedTeams, team.id])
+                          }
+                        }}
+                        sx={{ 
+                          color: selectedTeams.includes(team.id) ? 'error.main' : 'primary.main'
+                        }}
+                      >
+                        {selectedTeams.includes(team.id) ? <Delete /> : <Add />}
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            ) : (
+              <Box>
+                {profile.teams && profile.teams.length > 0 ? (
+                  <List>
+                    {profile.teams.map((team, index) => (
+                      <Box key={team.id}>
+                        <ListItem sx={{ py: { xs: 1, sm: 1.5 } }}>
+                          <ListItemIcon>
+                            <Business sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              <Box>
+                                <Typography sx={{ fontSize: { xs: '13px', sm: '14px' }, fontWeight: 600 }}>
+                                  {team.name}
+                                </Typography>
+                                {team.description && (
+                                  <Typography 
+                                    variant="caption" 
+                                    color="text.secondary"
+                                    sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                                  >
+                                    {team.description}
+                                  </Typography>
+                                )}
+                              </Box>
+                            }
+                            secondary={
+                              <Box mt={1}>
+                                {/* Líder del equipo */}
+                                {team.leader && (
+                                  <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+                                    <Chip
+                                      label="Líder"
+                                      size="small"
+                                      color="primary"
+                                      sx={{ 
+                                        fontSize: { xs: '9px', sm: '10px' },
+                                        height: { xs: '16px', sm: '18px' }
+                                      }}
+                                    />
+                                    <Typography 
+                                      variant="caption" 
+                                      sx={{ fontSize: { xs: '10px', sm: '11px' } }}
+                                    >
+                                      {team.leader.name}
+                                    </Typography>
+                                  </Box>
+                                )}
+                                
+                                {/* Miembros del equipo */}
+                                {team.members && team.members.length > 0 && (
+                                  <Box>
+                                    <Typography 
+                                      variant="caption" 
+                                      color="text.secondary"
+                                      sx={{ 
+                                        fontSize: { xs: '9px', sm: '10px' },
+                                        display: 'block',
+                                        mb: 0.5
+                                      }}
+                                    >
+                                      Miembros ({team.members.length}):
+                                    </Typography>
+                                    <Box display="flex" flexWrap="wrap" gap={0.5}>
+                                      {team.members.map((member) => (
+                                        <Chip
+                                          key={member.id}
+                                          label={member.name}
+                                          size="small"
+                                          variant="outlined"
+                                          sx={{ 
+                                            fontSize: { xs: '8px', sm: '9px' },
+                                            height: { xs: '16px', sm: '18px' }
+                                          }}
+                                        />
+                                      ))}
+                                    </Box>
+                                  </Box>
+                                )}
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                        {index < profile.teams!.length - 1 && <Divider />}
+                      </Box>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{ 
+                      fontSize: { xs: '13px', sm: '14px' },
+                      textAlign: 'center',
+                      py: { xs: 2, sm: 3 }
+                    }}
+                  >
+                    No perteneces a ningún equipo
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+
+        {/* Historial de Reservas */}
+        <Grid item xs={12}>
           <Paper sx={{ 
             p: { xs: 2, sm: 3 },
             borderRadius: { xs: '12px', sm: '16px' }
@@ -626,14 +965,14 @@ export default function ProfilePage() {
                         mb: { xs: 0.5, sm: 1 }
                       }}
                     >
-                      {reservations.length > 0 ? Math.round((reservations.filter(r => dayjs(r.date).isBefore(dayjs())).length / reservations.length) * 100) : 0}%
+                      {profile.teams?.length || 0}
                     </Typography>
                     <Typography 
                       variant="body2" 
                       color="text.secondary"
                       sx={{ fontSize: { xs: '12px', sm: '14px' } }}
                     >
-                      Tasa de Asistencia
+                      Equipos
                     </Typography>
                   </CardContent>
                 </Card>

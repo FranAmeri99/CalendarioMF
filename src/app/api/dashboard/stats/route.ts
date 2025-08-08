@@ -19,7 +19,7 @@ export async function GET() {
     const [reservations, userStats, teams, config] = await Promise.all([
       ReservationService.getAllReservations(),
       UserService.getUserStats(),
-      TeamService.getSimpleTeams(),
+      TeamService.getAllTeams(), // Cambiado de getSimpleTeams() a getAllTeams() para incluir miembros
       ConfigService.getConfig(),
     ])
 

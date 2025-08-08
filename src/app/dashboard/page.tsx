@@ -70,6 +70,12 @@ interface Team {
   id: string
   name: string
   description?: string
+  attendanceDay?: number
+  members?: {
+    id: string
+    name: string
+    email: string
+  }[]
 }
 
 export default function Dashboard() {
@@ -240,7 +246,7 @@ export default function Dashboard() {
           />
         </Grid>
         <Grid item xs={12} md={6}>
-          <WeeklyOccupation reservations={reservations} maxSpots={stats.maxSpots} />
+          <WeeklyOccupation reservations={reservations} teams={teams} maxSpots={stats.maxSpots} />
         </Grid>
       </Grid>
 

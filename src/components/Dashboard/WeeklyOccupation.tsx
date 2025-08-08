@@ -36,18 +36,32 @@ interface Reservation {
   }
 }
 
+interface Team {
+  id: string
+  name: string
+  description?: string
+  attendanceDay?: number // 0=Lunes, 1=Martes, 2=Miércoles, 3=Jueves, 4=Viernes, 5=Sábado, 6=Domingo
+  members?: {
+    id: string
+    name: string
+    email: string
+  }[]
+}
+
 interface WeeklyOccupationProps {
   reservations: Reservation[]
+  teams: Team[]
   maxSpots: number
 }
 
-export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccupationProps) {
+export default function WeeklyOccupation({ reservations, teams, maxSpots }: WeeklyOccupationProps) {
   const today = dayjs().tz('America/Argentina/Buenos_Aires').startOf('day')
   const startOfCurrentWeek = today.startOf('week') // Lunes como inicio de semana
 
   const weekDays = Array.from({ length: 7 }, (_, i) => dayjs(startOfCurrentWeek).tz('America/Argentina/Buenos_Aires').add(i, 'day'))
 
-  const getReservationsForDay = (date: dayjs.Dayjs) => {
+  // Función para obtener las reservas individuales para un día específico
+  const getIndividualReservationsForDay = (date: dayjs.Dayjs) => {
     const dayReservations = reservations.filter(reservation => {
       // Convertir la fecha de la reserva a UTC primero, luego a zona horaria de Argentina
       const reservationDate = dayjs.utc(reservation.date).tz('America/Argentina/Buenos_Aires').startOf('day')
@@ -57,7 +71,51 @@ export default function WeeklyOccupation({ reservations, maxSpots }: WeeklyOccup
       return isSame
     })
     
-    return dayReservations.length
+    return dayReservations
+  }
+
+  // Función para obtener los equipos que asisten en un día específico
+  const getTeamsForDate = (date: dayjs.Dayjs) => {
+    const dayOfWeek = date.day() // 0=domingo, 1=lunes, 2=martes, etc.
+    // Convertir de domingo=0 a lunes=0 (igual que en reservations/page.tsx)
+    const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    return teams.filter(team => team.attendanceDay === adjustedDay)
+  }
+
+  // Función para obtener el total de asistencia esperada para una fecha (individual + miembros de equipos)
+  const getTotalExpectedAttendanceForDate = (date: dayjs.Dayjs) => {
+    const individualReservations = getIndividualReservationsForDay(date)
+    const teamsForDay = getTeamsForDate(date)
+
+    // Set para rastrear usuarios únicos (evitar duplicados cuando una persona está en múltiples equipos)
+    const uniqueUsers = new Set<string>()
+
+    // Agregar usuarios con reservas individuales
+    individualReservations.forEach(reservation => {
+      uniqueUsers.add(reservation.userId)
+    })
+
+    // Agregar miembros de equipos (solo si no tienen reserva individual)
+    teamsForDay.forEach(team => {
+      if (team.members && team.members.length > 0) {
+        team.members.forEach(member => {
+          // Solo agregar si no tiene reserva individual para este día
+          const hasIndividualReservation = individualReservations.some(reservation => 
+            reservation.userId === member.id
+          )
+          
+          if (!hasIndividualReservation) {
+            uniqueUsers.add(member.id)
+          }
+        })
+      }
+    })
+
+    return uniqueUsers.size
+  }
+
+  const getReservationsForDay = (date: dayjs.Dayjs) => {
+    return getTotalExpectedAttendanceForDate(date)
   }
 
   const getOccupationPercentage = (date: dayjs.Dayjs) => {

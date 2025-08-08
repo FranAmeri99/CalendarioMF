@@ -7,6 +7,7 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
 model User {
   id           String        @id @default(cuid())
   email        String        @unique
@@ -16,11 +17,12 @@ model User {
   avatar       String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  teamId       String?
   reservations Reservation[]
   meetingRoomBookings MeetingRoomBooking[]
   teamMembers  Team[]        @relation("TeamMembers")
+  userTeams    UserTeam[]    // Nueva relación muchos a muchos
   team         Team?         @relation(fields: [teamId], references: [id])
+  teamId       String?       // Mantener para compatibilidad con reservas existentes
 
   @@map("users")
 }
@@ -29,14 +31,31 @@ model Team {
   id           String        @id @default(cuid())
   name         String        @unique
   description  String?
+  attendanceDay Int?         // 0=Lunes, 1=Martes, 2=Miércoles, 3=Jueves, 4=Viernes, 5=Sábado, 6=Domingo
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   leaderId     String?
   reservations Reservation[]
   leader       User?         @relation("TeamMembers", fields: [leaderId], references: [id])
-  members      User[]
+  userTeams    UserTeam[]    // Nueva relación muchos a muchos
+  users        User[]        // Relación opuesta para teamId
 
   @@map("teams")
+}
+
+// Nueva tabla intermedia para relación muchos a muchos entre User y Team
+model UserTeam {
+  id        String   @id @default(cuid())
+  userId    String
+  teamId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@map("user_teams")
 }
 
 model Reservation {
