@@ -691,12 +691,7 @@ export default function ReservationsPage() {
                     {/* Equipos que asisten este día */}
                     {teamsForDay.length > 0 && (
                       <div className="space-y-0.5">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="text-muted-foreground hidden sm:inline">Equipos</span>
-                          <span className="font-medium text-xs text-green-600">
-                            {teamsForDay.length} equipo{teamsForDay.length > 1 ? 's' : ''}
-                          </span>
-                        </div>
+                        
                         {teamsForDay.slice(0, 2).map((team) => (
                           <div
                             key={team.id}

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       attendanceDay: attendanceDay !== undefined ? attendanceDay : undefined,
     })
 
-    return NextResponse.json({ team })
+    return NextResponse.json(team)
   } catch (error) {
     console.error('Error creating team:', error)
     return NextResponse.json(
@@ -73,7 +73,7 @@ export async function PUT(request: NextRequest) {
       attendanceDay: attendanceDay !== undefined ? attendanceDay : undefined,
     })
 
-    return NextResponse.json({ team })
+    return NextResponse.json(team)
   } catch (error) {
     console.error('Error updating team:', error)
     return NextResponse.json(

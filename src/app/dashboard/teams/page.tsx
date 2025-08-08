@@ -112,6 +112,9 @@ export default function TeamsPage() {
         throw new Error(usersData.error)
       }
 
+      console.log('Teams data:', teamsData)
+      console.log('Users data:', usersData)
+
       // La API de equipos devuelve directamente el array
       setTeams(teamsData)
       setUsers(usersData)
