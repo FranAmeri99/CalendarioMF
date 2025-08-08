@@ -433,7 +433,7 @@ export default function ReservationsPage() {
         body: JSON.stringify({
           date: selectedDate,
           userId: session?.user?.id,
-          teamId: session?.user?.teamId || null,
+          teamId: null, // No enviar teamId por ahora para evitar errores de FK
         }),
       })
 
