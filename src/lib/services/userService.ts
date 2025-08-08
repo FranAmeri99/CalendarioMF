@@ -5,6 +5,7 @@ import type { User, Team } from '@prisma/client'
 export interface UserWithTeam extends User {
   team?: Team | null
   teams?: Team[] // Para la nueva relación muchos a muchos
+  userTeams?: any[] // Para compatibilidad con Prisma
 }
 
 export type { User, Team } from '@prisma/client'
@@ -32,6 +33,7 @@ export class UserService {
       const users = await prisma.user.findMany({
         include: {
           team: true, // Mantener para compatibilidad
+          // @ts-ignore
           userTeams: {
             include: {
               team: true
@@ -44,9 +46,9 @@ export class UserService {
       })
 
       // Transformar para incluir teams (nueva relación muchos a muchos)
-      return users.map(user => ({
+      return users.map((user: any) => ({
         ...user,
-        teams: user.userTeams?.map(ut => ut.team) || [],
+        teams: user.userTeams?.map((ut: any) => ut.team) || [],
         userTeams: undefined // No exponer userTeams en la respuesta
       }))
     } catch (error) {
